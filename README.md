@@ -40,6 +40,17 @@ Sanitizing the compliance data and using a relational database will better
 enable this at scale, as opposed to loading compliance reports for each cluster
 from object storage.
 
+## Deploying
+
+You can deploy the database using [terraform](https://www.terraform.io/).
+
+```console
+$ cd terraform; terraform init
+$ terraform apply
+```
+
+Cleanup the resources using `terraform destroy`.
+
 ## gRPC API **EXPERIMENTAL**
 
 Placeholder for documentation of gRPC endpoints implemented by the service.
