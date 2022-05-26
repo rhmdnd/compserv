@@ -1,3 +1,6 @@
+# Ignore the compserv binary
+compserv
+
 # Terraform
 terraform/.terraform*
 terraform/terraform.*
