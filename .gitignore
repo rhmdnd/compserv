@@ -1,6 +1,9 @@
 # Ignore the compserv binary
 compserv
 
+# Ignore potential configs
+configs/config.yaml
+
 # Terraform
 terraform/.terraform*
 terraform/terraform.*

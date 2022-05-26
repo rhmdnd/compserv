@@ -1,0 +1,14 @@
+---
+database:
+  # Hostname or IP address of the database endpoint (required).
+  host:
+  # Database service user (required).
+  username:
+  # Database password AWS Secret Manager ARN (required).
+  secret_arn:
+  # Region of the secret (required).
+  secret_region:
+  # Database port (defaults: "5432")
+  # port: "5432"
+  # Database name (defaults: "compliance")
+  # name: "compliance"
