@@ -14,6 +14,8 @@ import (
 )
 
 func ParseConfig(configDir string) map[string]string {
+	viper.SetDefault("app.host", "localhost")
+	viper.SetDefault("app.port", "50051")
 	viper.SetDefault("database.port", "5432")
 	viper.SetDefault("database.name", "compliance")
 	viper.SetConfigName("config")
@@ -29,6 +31,8 @@ func ParseConfig(configDir string) map[string]string {
 	db_name := viper.GetString("database.name")
 	db_secret_arn := viper.GetString("database.secret_arn")
 	db_secret_region := viper.GetString("database.secret_region")
+	app_host := viper.GetString("app.host")
+	app_port := viper.GetString("app.port")
 
 	if len(db_host) == 0 {
 		log.Fatal("Database host not provided.")
@@ -51,6 +55,8 @@ func ParseConfig(configDir string) map[string]string {
 	m["db_username"] = db_username
 	m["db_name"] = db_name
 	m["secret_region"] = db_secret_region
+	m["app_host"] = app_host
+	m["app_port"] = app_port
 
 	log.Printf("Loaded configuration file: %s", viper.ConfigFileUsed())
 	return m

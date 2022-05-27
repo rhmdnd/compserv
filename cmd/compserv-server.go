@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"net"
 
 	api "github.com/rhmdnd/compserv/pkg/api"
 	config "github.com/rhmdnd/compserv/pkg/config"
@@ -23,9 +24,15 @@ func main() {
 
 	log.Printf("Connected to database: %v", db)
 
+	appStr := c["app_host"] + ":" + c["app_port"]
+	lis, err := net.Listen("tcp", appStr)
+	if err != nil {
+		log.Fatalf("Failed to listen to %s: %v", appStr, err)
+	}
+
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	api.RegisterComplianceServiceServer(grpcServer, api.NewServer(db))
-	// TODO(rhmdnd): Add host and port configuration then call
-	// grpcServer.Server()
+	log.Printf("Server listening on %s", appStr)
+	grpcServer.Serve(lis)
 }
