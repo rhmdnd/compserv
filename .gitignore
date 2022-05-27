@@ -1,6 +1,5 @@
-# Ignore build binaries
-compserv
-compserv-server
+# Ignore builds
+builds/
 
 # Ignore potential configs
 configs/config.yaml
