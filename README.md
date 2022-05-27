@@ -40,6 +40,15 @@ Sanitizing the compliance data and using a relational database will better
 enable this at scale, as opposed to loading compliance reports for each cluster
 from object storage.
 
+## Building
+
+You can use the `Makefile` target to build go binaries, which are output to
+`builds/` by default:
+
+```console
+$ make build
+```
+
 ## Deploying
 
 You can deploy the database using [terraform](https://www.terraform.io/).
