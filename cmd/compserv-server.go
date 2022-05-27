@@ -22,7 +22,7 @@ func main() {
 		log.Fatalf("Failed to connect to database: %s", err)
 	}
 
-	log.Printf("Connected to database: %v", db)
+	log.Pritf("Connected to database: %v", db)
 
 	appStr := c["app_host"] + ":" + c["app_port"]
 	lis, err := net.Listen("tcp", appStr)
