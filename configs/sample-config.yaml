@@ -1,4 +1,9 @@
 ---
+app:
+  # Hostname or IP address of the application endpoint (defaults: "localhost").
+  # host: "localhost"
+  # Application port (defaults: "50051")
+  # port: "50051"
 database:
   # Hostname or IP address of the database endpoint (required).
   host:
