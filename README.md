@@ -1,5 +1,7 @@
 # compserv
 
+[![Go](https://github.com/rhmdnd/compserv/actions/workflows/go.yml/badge.svg)](https://github.com/rhmdnd/compserv/actions/workflows/go.yml)
+
 The name "compserv" is short for "compliance service" and its goal is to manage
 and aggregate compliance information.
 
