@@ -62,7 +62,10 @@ $ terraform apply
 
 Cleanup the resources using `terraform destroy`.
 
-## gRPC API **EXPERIMENTAL**
+## gRPC API
+
+This API is marked as **EXPERIMENTAL** and may change in backwards incompatible
+ways.
 
 Placeholder for documentation of gRPC endpoints implemented by the service.
 
