@@ -62,6 +62,11 @@ $ terraform apply
 
 Cleanup the resources using `terraform destroy`.
 
+## Migrations
+
+Please refer to the [migrations documentation](./migrations/README.md) for
+instructions on creating and managing database migrations.
+
 ## gRPC API
 
 This API is marked as **EXPERIMENTAL** and may change in backwards incompatible
