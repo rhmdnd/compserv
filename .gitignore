@@ -7,3 +7,6 @@ configs/config.yaml
 # Terraform
 terraform/.terraform*
 terraform/terraform.*
+
+# Ignore the golang-migrate/migrate binary
+migrate
