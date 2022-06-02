@@ -26,6 +26,12 @@ build: $(BUILDS_DIR)
 test:
 	go test -v ./...
 
+.PHONY: test-database
+test-database:
+	bash migrations/setup.sh
+	go test -v ./tests --args -host localhost -username dbadmin -password secret
+	bash migrations/cleanup.sh
+
 .PHONY: test-migrate
 test-migrate: $(TOOLS_DIR)/migrate
 	MIGRATE=$(MIGRATE) migrations/test.sh
