@@ -123,12 +123,12 @@ func getSecret(secretName string, region string) string {
 		return secretString
 	} else {
 		decodedBinarySecretBytes := make([]byte, base64.StdEncoding.DecodedLen(len(result.SecretBinary)))
-		len, err := base64.StdEncoding.Decode(decodedBinarySecretBytes, result.SecretBinary)
+		secretLen, err := base64.StdEncoding.Decode(decodedBinarySecretBytes, result.SecretBinary)
 		if err != nil {
 			fmt.Println("Base64 Decode Error:", err)
 			return secretString
 		}
-		decodedBinarySecret = string(decodedBinarySecretBytes[:len])
+		decodedBinarySecret = string(decodedBinarySecretBytes[:secretLen])
 		return decodedBinarySecret
 	}
 }
