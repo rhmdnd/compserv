@@ -1,5 +1,6 @@
-# Ignore builds
+# Ignore builds and tools
 builds/
+tools/
 
 # Ignore potential configs
 configs/config.yaml

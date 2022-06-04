@@ -6,7 +6,8 @@ This folder contains database migrations for the compliance service using
 This project requires using the `migrate` CLI to change the database schema and
 to add new migrations. Please refer to the
 [documentation](https://github.com/golang-migrate/migrate/tree/master/cmd/migrate)
-for installation instructions.
+for installation instructions or simply run `make tools/migrate` from the root of
+this project.
 
 ## Examples
 
