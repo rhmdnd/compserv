@@ -1,0 +1,32 @@
+name: PostgreSQL Migration CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+env:
+  GO_VERSION: '1.18'
+  DB_USER: dbadmin
+  DB_PASSWORD: secret
+  DB_NAME: compliance
+  DB_HOST: localhost
+  # podman does exist on Ubuntu, but it's old and seems buggy
+  RUNTIME: docker
+jobs:
+  test:
+    name: migrate-test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Install golang-migrate
+      run: |
+        mkdir -p ${GITHUB_WORKSPACE}/tools
+        echo "${GITHUB_WORKSPACE}/tools" >> ${GITHUB_PATH}
+        make tools/migrate
+
+    - name: Run migrations
+      run: |
+        bash -x ./migrations/test.sh

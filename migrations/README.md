@@ -30,3 +30,16 @@ Apply all down migrations:
 ```console
 $ ./migrate -database $POSTGRESQL_URL -path migrations down
 ```
+
+## Test
+
+To run a quick and easy test of the migrations, use the `test.sh` script:
+```console
+bash migrations/test.sh
+```
+
+If you don't have the `migrate` CLI tool installed in your `$PATH`, run:
+```console
+make tools/migrate
+PATH=$PATH:$(pwd)/tools bash migrations/test.sh
+```
