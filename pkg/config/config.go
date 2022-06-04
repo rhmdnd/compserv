@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -36,16 +35,12 @@ func ParseConfig(configDir string) map[string]string {
 
 	if len(db_host) == 0 {
 		log.Fatal("Database host not provided.")
-		os.Exit(1)
 	} else if len(db_secret_arn) == 0 {
 		log.Fatal("Database password not provided as an ARN.")
-		os.Exit(1)
 	} else if len(db_username) == 0 {
 		log.Fatal("Database username not provided.")
-		os.Exit(1)
 	} else if len(db_secret_region) == 0 {
 		log.Fatal("Database secret region not provided.")
-		os.Exit(1)
 	}
 
 	m := make(map[string]string)
