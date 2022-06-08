@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -12,13 +13,18 @@ import (
 	"github.com/spf13/viper"
 )
 
-func ParseConfig(configDir string) map[string]string {
+func ParseConfig(configDir, configFile string) map[string]string {
 	viper.SetDefault("app.host", "localhost")
 	viper.SetDefault("app.port", "50051")
 	viper.SetDefault("database.port", "5432")
 	viper.SetDefault("database.name", "compliance")
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
+	configType := "yaml"
+	parts := strings.Split(configFile, ".")
+	if ln := len(parts); ln > 1 {
+		configType = parts[ln-1]
+	}
+	viper.SetConfigName(configFile)
+	viper.SetConfigType(configType)
 	viper.AddConfigPath(configDir)
 	err := viper.ReadInConfig()
 	if err != nil {

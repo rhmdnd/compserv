@@ -14,8 +14,9 @@ import (
 
 func main() {
 	var configDir = flag.String("config-dir", "configs/", "Path to YAML configuration directory containing a config.yaml file.")
+	var configFile = flag.String("config-file", "config.yaml", "File name of the service config")
 	flag.Parse()
-	c := config.ParseConfig(*configDir)
+	c := config.ParseConfig(*configDir, *configFile)
 	connStr := config.GetDatabaseConnectionString(c)
 	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
