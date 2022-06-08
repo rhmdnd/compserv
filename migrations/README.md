@@ -6,7 +6,8 @@ This folder contains database migrations for the compliance service using
 This project requires using the `migrate` CLI to change the database schema and
 to add new migrations. Please refer to the
 [documentation](https://github.com/golang-migrate/migrate/tree/master/cmd/migrate)
-for installation instructions.
+for installation instructions or simply run `make tools/migrate` from the root of
+this project.
 
 ## Examples
 
@@ -28,4 +29,17 @@ Apply all down migrations:
 
 ```console
 $ ./migrate -database $POSTGRESQL_URL -path migrations down
+```
+
+## Test
+
+To run a quick and easy test of the migrations, use the `test.sh` script:
+```console
+bash migrations/test.sh
+```
+
+If you don't have the `migrate` CLI tool installed in your `$PATH`, run:
+```console
+make tools/migrate
+PATH=$PATH:$(pwd)/tools bash migrations/test.sh
 ```
