@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -z $MIGRATE ]; then
+    MIGRATE=migrate
+fi
+
 if [ -z $RUNTIME ]; then
     if which podman 1>/dev/null 2>&1; then
         RUNTIME=podman
@@ -58,5 +62,5 @@ wait_for_db_init
 
 POSTGRESQL_URL="postgres://$DB_USER:$DB_PASSWORD@$DB_HOST:5432/$DB_NAME?sslmode=disable"
 
-migrate -database $POSTGRESQL_URL -path migrations up
-echo "y" | migrate -database $POSTGRESQL_URL -path migrations down
+$MIGRATE -database $POSTGRESQL_URL -path migrations up
+echo "y" | $MIGRATE -database $POSTGRESQL_URL -path migrations down
