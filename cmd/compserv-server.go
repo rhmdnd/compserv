@@ -13,8 +13,10 @@ import (
 )
 
 func main() {
-	var configDir = flag.String("config-dir", "configs/", "Path to YAML configuration directory containing a config.yaml file.")
-	var configFile = flag.String("config-file", "config.yaml", "File name of the service config")
+	configDir := flag.String("config-dir", "configs/",
+		"Path to YAML configuration directory containing a config.yaml file.")
+	configFile := flag.String("config-file", "config.yaml",
+		"File name of the service config")
 	flag.Parse()
 	c := config.ParseConfig(*configDir, *configFile)
 	connStr := config.GetDatabaseConnectionString(c)
@@ -35,5 +37,7 @@ func main() {
 	grpcServer := grpc.NewServer(opts...)
 	api.RegisterComplianceServiceServer(grpcServer, api.NewServer(db))
 	log.Printf("Server listening on %s", appStr)
-	grpcServer.Serve(lis)
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("Failed to start grpc server %v", err)
+	}
 }

@@ -26,38 +26,38 @@ func ParseConfig(configDir, configFile string) map[string]string {
 	viper.SetConfigName(configFile)
 	viper.SetConfigType(configType)
 	viper.AddConfigPath(configDir)
-	err := viper.ReadInConfig()
-	if err != nil {
-		panic(fmt.Errorf("Fatal error reading config file: %w \n", err))
+	if err := viper.ReadInConfig(); err != nil {
+		panic(fmt.Errorf("fatal error reading config file: %w", err))
 	}
-	db_host := viper.GetString("database.host")
-	db_port := viper.GetString("database.port")
-	db_username := viper.GetString("database.username")
-	db_name := viper.GetString("database.name")
-	db_secret_arn := viper.GetString("database.secret_arn")
-	db_secret_region := viper.GetString("database.secret_region")
-	app_host := viper.GetString("app.host")
-	app_port := viper.GetString("app.port")
+	dbHost := viper.GetString("database.host")
+	dbPort := viper.GetString("database.port")
+	dbUsername := viper.GetString("database.username")
+	dbName := viper.GetString("database.name")
+	dbSecretArn := viper.GetString("database.secret_arn")
+	dbSecretRegion := viper.GetString("database.secret_region")
+	appHost := viper.GetString("app.host")
+	appPort := viper.GetString("app.port")
 
-	if len(db_host) == 0 {
+	// nolint:gocritic // gocritic suggests to rewrite this as switch-case..nope..
+	if len(dbHost) == 0 {
 		log.Fatal("Database host not provided.")
-	} else if len(db_secret_arn) == 0 {
+	} else if len(dbSecretArn) == 0 {
 		log.Fatal("Database password not provided as an ARN.")
-	} else if len(db_username) == 0 {
+	} else if len(dbUsername) == 0 {
 		log.Fatal("Database username not provided.")
-	} else if len(db_secret_region) == 0 {
+	} else if len(dbSecretRegion) == 0 {
 		log.Fatal("Database secret region not provided.")
 	}
 
 	m := make(map[string]string)
-	m["db_host"] = db_host
-	m["db_port"] = db_port
-	m["db_secret_arn"] = db_secret_arn
-	m["db_username"] = db_username
-	m["db_name"] = db_name
-	m["secret_region"] = db_secret_region
-	m["app_host"] = app_host
-	m["app_port"] = app_port
+	m["db_host"] = dbHost
+	m["db_port"] = dbPort
+	m["db_secret_arn"] = dbSecretArn
+	m["db_username"] = dbUsername
+	m["db_name"] = dbName
+	m["secret_region"] = dbSecretRegion
+	m["app_host"] = appHost
+	m["app_port"] = appPort
 
 	log.Printf("Loaded configuration file: %s", viper.ConfigFileUsed())
 	return m
@@ -65,7 +65,8 @@ func ParseConfig(configDir, configFile string) map[string]string {
 
 func GetDatabaseConnectionString(v map[string]string) string {
 	secret := getSecret(v["db_secret_arn"], v["secret_region"])
-	connectionString := fmt.Sprintf("host=%s user=%s dbname=%s password=%s port=%s", v["db_host"], v["db_username"], v["db_name"], secret, v["db_port"])
+	connectionString := fmt.Sprintf("host=%s user=%s dbname=%s password=%s port=%s",
+		v["db_host"], v["db_username"], v["db_name"], secret, v["db_port"])
 	return connectionString
 }
 
@@ -73,7 +74,7 @@ func GetDatabaseConnectionString(v map[string]string) string {
 func getSecret(secretName string, region string) string {
 	var secretString, decodedBinarySecret string
 
-	//Create a Secrets Manager client
+	// Create a Secrets Manager client
 	sess, err := session.NewSession()
 	if err != nil {
 		// Handle session creation error
@@ -92,6 +93,7 @@ func getSecret(secretName string, region string) string {
 
 	result, err := svc.GetSecretValue(input)
 	if err != nil {
+		//nolint:errorlint // let's keep borrowed code the way it is
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case secretsmanager.ErrCodeDecryptionFailure:
@@ -124,6 +126,7 @@ func getSecret(secretName string, region string) string {
 
 	// Decrypts secret using the associated KMS key.
 	// Depending on whether the secret is a string or binary, one of these fields will be populated.
+	// nolint:golint,revive // let's keep borrowed code the way it is
 	if result.SecretString != nil {
 		secretString = *result.SecretString
 		return secretString
