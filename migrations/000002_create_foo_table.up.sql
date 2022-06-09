@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS foo (
+   id serial PRIMARY KY,
+   bar VARCHAR(1000)
+);
