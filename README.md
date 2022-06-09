@@ -53,6 +53,8 @@ $ make build
 
 ## Deploying
 
+### AWS
+
 You can deploy the database using [terraform](https://www.terraform.io/).
 
 ```console
@@ -61,6 +63,19 @@ $ terraform apply
 ```
 
 Cleanup the resources using `terraform destroy`.
+
+### Kubernetes
+
+Alternatively, you can deploy the database to a Kubernetes cluster with
+[Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization).
+This functionality is primarily for development purposes and requires
+additional work to intergate with the compliance service. In the future, we may
+consider breaking the current Kustomize structure into overlays for different
+environments.
+
+```console
+$ kubectl apply -k kustomize
+```
 
 ## Migrations
 
