@@ -1,0 +1,16 @@
+---
+run:
+  concurrency: 6
+  timeout: 5m
+linters:
+  enable-all: true
+  disable:
+    - cyclop
+    - exhaustivestruct
+    - exhaustruct
+    - forbidigo
+    - funlen
+    - godot
+    - nlreturn
+    - varnamelen
+    - wsl
