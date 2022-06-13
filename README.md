@@ -77,6 +77,13 @@ environments.
 $ kubectl apply -k kustomize
 ```
 
+Alternatively, you can use the `deploy` Makefile target to deploy the
+compliance service and a PostgreSQL database into a Kubernetes cluster.
+
+```console
+$ make deploy
+```
+
 ## Migrations
 
 Please refer to the [migrations documentation](./migrations/README.md) for

@@ -58,3 +58,7 @@ $(TOOLS_DIR)/golangci-lint:
 	curl -sfL $$URL/$$VERSION/install.sh | sh -s $$VERSION
 	$(TOOLS_DIR)/golangci-lint version
 	$(TOOLS_DIR)/golangci-lint linters
+
+.PHONY: deploy
+deploy:
+	kubectl apply -k kustomize
