@@ -3,10 +3,12 @@ ARCH := $(shell go env GOARCH)
 
 MIGRATE_VERSION := v4.15.2
 GOLANGCI_LINT_VERSION := v1.46.2
+KUBECTL_VERSION := v1.24.1
 
 BUILDS_DIR := builds
 TOOLS_DIR := tools
 MIGRATE?=
+KUBECTL = ./$(TOOLS_DIR)/kubectl
 
 .PHONY: $(BUILDS_DIR)
 $(BUILDS_DIR):
@@ -60,5 +62,23 @@ $(TOOLS_DIR)/golangci-lint:
 	$(TOOLS_DIR)/golangci-lint linters
 
 .PHONY: deploy
-deploy:
-	kubectl apply -k kustomize
+deploy: $(TOOLS_DIR)/kubectl
+	$(KUBECTL) apply -k kustomize
+
+$(TOOLS_DIR)/kubectl: $(TOOLS_DIR)
+# Check if tools/kubectl exists - if it does then the default value provided
+# above will work.
+ifeq (,$(wildcard $(KUBECTL)))
+# If tools/kubectl doesn't exist, check if the binary exists somewhere else in
+# the path and use that. Otherwise, if we get back an empty string here we need
+# to download a copy of kubectl and put it in the tools/ directory.
+ifeq (,$(shell which kubectl 2>/dev/null))
+	@{ \
+	set -e ;\
+	curl -L --output $(KUBECTL) "https://dl.k8s.io/release/$(KUBECTL_VERSION)/bin/linux/amd64/kubectl" ;\
+	chmod u+x $(KUBECTL) ;\
+	}
+else
+KUBECTL = $(shell which kubectl)
+endif
+endif
