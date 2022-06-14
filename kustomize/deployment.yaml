@@ -15,7 +15,7 @@ spec:
       labels:
         app: postgres
     spec:
-      containers:
+      conainers:
       - image: postgres:13-alpine
         name: postgres
         env:
