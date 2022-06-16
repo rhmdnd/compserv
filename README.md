@@ -109,3 +109,20 @@ When in doubt, release early and often.
 Please use [issues](https://github.com/rhmdnd/compserv/issues) and [pull
 requests](https://github.com/rhmdnd/compserv/pulls) for contributing to the
 project.
+
+### Testing
+
+This repository includes unit tests and integration tests that exercise the
+database. You can run the unit tests using:
+
+```console
+$ make test
+```
+
+You can run the integration tests against a PostgreSQL container using:
+
+```console
+$ make test-database-integration
+```
+
+These tests are meant to be run against a locally running container.
