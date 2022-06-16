@@ -37,7 +37,7 @@ verify: verify-go-lint
 # linter, but ignore anything in vendor/.
 .PHONY: bash-lint
 bash-lint:
-	shellcheck $(shell find . -type f -name '*.sh' -not -path "./vendor/*")
+	shellcheck -x $(shell find . -type f -name '*.sh' -not -path "./vendor/*")
 
 .PHONY: verify-go-lint
 verify-go-lint: $(TOOLS_DIR)/golangci-lint ## Verify the golang code by linting
