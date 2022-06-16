@@ -33,6 +33,12 @@ test-migrate: $(TOOLS_DIR)/migrate
 .PHONY: verify
 verify: verify-go-lint
 
+# Find all bash scripts by relying on the file extension and pass them to the
+# linter, but ignore anything in vendor/.
+.PHONY: bash-lint
+bash-lint:
+	shellcheck $(shell find . -type f -name '*.sh' -not -path "./vendor/*")
+
 .PHONY: verify-go-lint
 verify-go-lint: $(TOOLS_DIR)/golangci-lint ## Verify the golang code by linting
 	# we use go 1.17 because golangci-lint still has issues with 1.18
