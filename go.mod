@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/aws/aws-sdk-go v1.44.22
+	github.com/lib/pq v1.10.6
 	github.com/spf13/viper v1.12.0
 	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.28.0

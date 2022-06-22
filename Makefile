@@ -24,11 +24,16 @@ build: $(BUILDS_DIR)
 
 .PHONY: test
 test:
-	go test -v ./...
+	go test -v ./pkg/...
+	go test -v ./cmd/...
 
 .PHONY: test-migrate
 test-migrate: $(TOOLS_DIR)/migrate
 	MIGRATE=$(MIGRATE) migrations/test.sh
+
+.PHONY: test-database-integration
+test-database-integration:
+	./utils/run_integration_tests.sh
 
 .PHONY: verify
 verify: verify-go-lint
