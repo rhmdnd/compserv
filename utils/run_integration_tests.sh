@@ -21,4 +21,13 @@ trap cleanup_database_container EXIT
 create_database_container
 wait_for_db_init
 
-go test -v "${TOP_DIR}/tests/..."
+# Make sure we run integration tests serially by isolating them to a single
+# process. This isn't ideal for all tests, but since we're testing against a
+# real databse that needs to be upgraded and downgraded, we could introduce
+# transient issues if multiple tests are attempting to modify state at the same
+# time. This constraint is specific to the database tests. When we increase
+# integration coverage to include more tests (e.g., that exercise the API
+# layer) then we should consider organizing the integration tests into separate
+# modules. In the interest of performance, we should keep the tests that run
+# serially as small as possible.
+go test -v -p 1 "${TOP_DIR}/tests/..."
