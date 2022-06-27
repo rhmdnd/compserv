@@ -1,0 +1,32 @@
+dependencies:
+  - name: go
+    version: 1.18
+    refPaths:
+    - path: .github/workflows/go.yml
+      match: GO_VERSION
+    - path: .github/workflows/migrations.yml
+      match: GO_VERSION
+
+  - name: lint-go-version
+    version: 1.17
+    refPaths:
+    - path: .github/workflows/go.yml
+      match: LINT_GO_VERSION
+
+  - name: golangci-lint
+    version: 1.46.2
+    refPaths:
+    - path: Makefile
+      match: GOLANGCI_LINT_VERSION
+
+  - name: kubectl
+    version: 1.24.1
+    refPaths:
+    - path: Makefile
+      match: KUBECTL_VERSION
+
+  - name: migrate
+    version: v4.15.2
+    refPaths:
+    - path: Makefile
+      match: MIGRATE_VERSION
