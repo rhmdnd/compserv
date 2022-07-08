@@ -21,7 +21,7 @@ func getDatabaseConnection(t *testing.T) *sql.DB {
 	// database to run tests.
 	connStr := "host=localhost user=dbadmin dbname=compliance password=secret port=5432 sslmode=disable"
 
-	conn, err := sql.Open("postgres", connStr)
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		msg := fmt.Sprintf("Unable to initialize connection to test database: %s", err)
 		t.Skip(msg)
@@ -32,7 +32,7 @@ func getDatabaseConnection(t *testing.T) *sql.DB {
 	// database connection directly
 	// (https://github.com/golang/go/issues/48309).
 	for i := 0; i < 10; i++ {
-		if err := conn.Ping(); err != nil {
+		if err := db.Ping(); err != nil {
 			// We should only retry if we're dealing with a network
 			// issue of some kind. No amount of retries is going to
 			// fix incorrect credentials.
@@ -48,14 +48,14 @@ func getDatabaseConnection(t *testing.T) *sql.DB {
 		}
 	}
 
-	return conn
+	return db
 }
 
 func getMigrationHelper(t *testing.T) *migrate.Migrate {
 	t.Helper()
-	conn := getDatabaseConnection(t)
+	db := getDatabaseConnection(t)
 
-	driver, err := postgres.WithInstance(conn, &postgres.Config{})
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
 		t.Skip("Unable to initialize database driver for migrations")
 	}
