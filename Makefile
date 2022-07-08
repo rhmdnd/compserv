@@ -36,7 +36,7 @@ test-database-integration:
 	./utils/run_integration_tests.sh
 
 .PHONY: verify
-verify: verify-go-lint
+verify: verify-go-lint verify-dependencies
 
 # Find all bash scripts by relying on the file extension and pass them to the
 # linter, but ignore anything in vendor/.
@@ -71,6 +71,13 @@ $(TOOLS_DIR)/golangci-lint:
 	curl -sfL $$URL/$$VERSION/install.sh | sh -s $$VERSION
 	$(TOOLS_DIR)/golangci-lint version
 	$(TOOLS_DIR)/golangci-lint linters
+
+.PHONY: verify-dependencies
+verify-dependencies: $(TOOLS_DIR)/zeitgeist ## Verify external dependencies
+	$(TOOLS_DIR)/zeitgeist validate --local-only --base-path . --config dependencies.yaml
+
+$(TOOLS_DIR)/zeitgeist: $(TOOLS_DIR)
+	go build -o tools ./vendor/sigs.k8s.io/zeitgeist
 
 .PHONY: deploy
 deploy: $(TOOLS_DIR)/kubectl
