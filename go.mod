@@ -3,7 +3,7 @@ module github.com/rhmdnd/compserv
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go v1.44.22
+	github.com/aws/aws-sdk-go v1.44.52
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/lib/pq v1.10.6
 	github.com/spf13/viper v1.12.0
