@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/lib/pq v1.10.6
 	github.com/spf13/viper v1.12.0
-	github.com/stretchr/testify v1.7.4
+	github.com/stretchr/testify v1.8.0
 	google.golang.org/grpc v1.47.0
 	google.golang.org/protobuf v1.28.0
 	gorm.io/driver/postgres v1.3.6
