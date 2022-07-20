@@ -115,6 +115,10 @@ func TestInsertSubjectSucceeds(t *testing.T) { // nolint:paralleltest // databas
 	assert.Equal(t, expectedSubject.ID, subject.ID, "expected %s got %s", expectedSubject.ID, subject.ID)
 	assert.Equal(t, expectedSubject.Name, subject.Name, "expected %s got %s", expectedSubject.Name, subject.Name)
 	assert.Equal(t, expectedSubject.Type, subject.Type, "expected %s got %s", expectedSubject.Type, subject.Type)
+	parentIDValue, err := subject.ParentID.Value()
+	assert.False(t, subject.ParentID.Valid)
+	assert.Nil(t, err)
+	assert.Nil(t, parentIDValue)
 
 	// Drop the database instead of downgrading since we don't need the
 	// data anyway
@@ -187,6 +191,66 @@ func TestInsertSubjectWithLongTypeFails(t *testing.T) { // nolint:paralleltest /
 	}
 }
 
+func TestInsertSubjectWithParent(t *testing.T) { // nolint:paralleltest // database tests should run serially
+	m := getMigrationHelper(t)
+	if err := m.Up(); err != nil {
+		t.Fatalf("Unable to upgrade database: %s", err)
+	}
+
+	// Create a subject to act as the parent
+	parentID := getUUIDString()
+	subjectTypeStr := getUUIDString()
+	p := Subject{ID: parentID, Name: clusterName, Type: subjectTypeStr}
+	gormDB := getGormHelper()
+	gormDB.Create(&p)
+
+	// Create another subject referencing the parent
+	id := getUUIDString()
+	subjectTypeStr = getUUIDString()
+	s := Subject{ID: id, Name: clusterName, Type: subjectTypeStr, ParentID: sql.NullString{String: parentID, Valid: true}}
+	gormDB.Create(&s)
+
+	a := Subject{}
+	gormDB.First(&a, "id = ?", id)
+
+	e := Subject{ID: id, Name: clusterName, Type: subjectTypeStr, ParentID: sql.NullString{String: parentID, Valid: true}}
+	assert.Equal(t, e.ID, a.ID, "expected %s got %s", e.ID, a.ID)
+	assert.Equal(t, e.Name, a.Name, "expected %s got %s", e.Name, a.Name)
+	assert.Equal(t, e.Type, a.Type, "expected %s got %s", e.Type, a.Type)
+	assert.True(t, a.ParentID.Valid)
+	assert.Equal(t, e.ParentID.String, a.ParentID.String, "expected %s got %s", e.ParentID.String, a.ParentID.String)
+
+	// Drop the database instead of downgrading since we don't need the
+	// data anyway
+	if err := m.Drop(); err != nil {
+		t.Fatalf("Unable to drop database: %s", err)
+	}
+}
+
+func TestInsertSubjectWithNonExistentParent(t *testing.T) { // nolint:paralleltest // database tests should run serially
+	m := getMigrationHelper(t)
+	if err := m.Up(); err != nil {
+		t.Fatalf("Unable to upgrade database: %s", err)
+	}
+
+	// Generate a fake parent ID that doesn't actually exist
+	parentID := getUUIDString()
+
+	// Create another subject referencing the parent
+	id := getUUIDString()
+	subjectTypeStr := getUUIDString()
+	s := Subject{ID: id, Name: clusterName, Type: subjectTypeStr, ParentID: sql.NullString{String: parentID, Valid: true}}
+	gormDB := getGormHelper()
+	err := gormDB.Create(&s).Error
+	assert.NotEmpty(t, err, "Shouldn't be able to insert values the violate foreign key constraints")
+
+	// Drop the database instead of downgrading since we don't need the
+	// data anyway
+	if err := m.Drop(); err != nil {
+		t.Fatalf("Unable to drop database: %s", err)
+	}
+}
+
 func TestMigration(t *testing.T) { // nolint:paralleltest // database tests should run serially
 	m := getMigrationHelper(t)
 
@@ -205,7 +269,7 @@ func TestMigration(t *testing.T) { // nolint:paralleltest // database tests shou
 	// Upgrade the database and make sure all upgrades apply cleanly.
 	err = m.Up()
 	version, dirty, _ = m.Version()
-	expectedVersion = uint(1)
+	expectedVersion = uint(2)
 	assert.Equal(t, expectedVersion, version, "Database version mismatch: want %d but got %d", expectedVersion, version)
 	assert.Equal(t, false, dirty, "Database state mismatch: want %t but got %t", false, dirty)
 	assert.Equal(t, err, nil, "Error upgrading the database: %s", err)
@@ -217,4 +281,53 @@ func TestMigration(t *testing.T) { // nolint:paralleltest // database tests shou
 	assert.Equal(t, expectedVersion, version, "Database version mismatch: want %d but got %d", expectedVersion, version)
 	assert.Equal(t, false, dirty, "Database state mismatch: want %t but got %t", false, dirty)
 	assert.Equal(t, err, nil, "Error downgrading the database: %s", err)
+}
+
+func TestSubjectParentIDMigration(t *testing.T) { // nolint:paralleltest // database tests should run serially
+	m := getMigrationHelper(t)
+	gormDB := getGormHelper()
+
+	type subject struct{}
+	tableName := "subjects"
+	columnName := "parent_id"
+
+	if err := m.Migrate(1); err != nil {
+		t.Fatalf("Unable to migrate to version %d: %s", 1, err)
+	}
+	result := gormDB.Migrator().HasTable(tableName)
+	assert.True(t, result, "Table doesn't exist: %s", tableName)
+
+	for _, s := range []string{"id", "name", "type"} {
+		result = gormDB.Migrator().HasColumn(&subject{}, s)
+		assert.True(t, result, "Table doesn't have column: %s", s)
+	}
+	result = gormDB.Migrator().HasColumn(&subject{}, columnName)
+	assert.False(t, result, "Table has column: %s", columnName)
+
+	// Ensure the upgrade adds the parent_id colume and the constraint
+	if err := m.Migrate(2); err != nil {
+		t.Fatalf("Unable to migrate to version %d: %s", 2, err)
+	}
+	result = gormDB.Migrator().HasTable(tableName)
+	assert.True(t, result, "Table doesn't exist: %s", tableName)
+
+	for _, s := range []string{"id", "name", "type", "parent_id"} {
+		result = gormDB.Migrator().HasColumn(&subject{}, s)
+		assert.True(t, result, "Table doesn't have column: %s", s)
+	}
+
+	constraintName := "fk_subjects_parent_id"
+	result = gormDB.Migrator().HasConstraint(&subject{}, constraintName)
+	assert.True(t, result, "Table doesn't have constraint: %s", constraintName)
+
+	// Make sure the downgrade removes the parent_id colume and the
+	// constraint
+	if err := m.Migrate(1); err != nil {
+		t.Fatalf("Unable to migrate to version %d: %s", 1, err)
+	}
+	result = gormDB.Migrator().HasColumn(&subject{}, columnName)
+	assert.False(t, result, "Table has column: %s", columnName)
+
+	result = gormDB.Migrator().HasConstraint(&subject{}, constraintName)
+	assert.False(t, result, "Table has constraint: %s", constraintName)
 }
