@@ -1,4 +1,4 @@
-package integration_test // nolint:typecheck
+package tests
 
 type Subject struct {
 	ID   string
