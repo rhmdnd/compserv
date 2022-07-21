@@ -1,4 +1,4 @@
-package integration_test // nolint:typecheck
+package tests // nolint:testpackage
 
 import (
 	"database/sql"
@@ -72,7 +72,7 @@ func getMigrationHelper(t *testing.T) *migrate.Migrate {
 	if err != nil {
 		t.Skip("Unable to initialize database driver for migrations")
 	}
-	m, err := migrate.NewWithDatabaseInstance("file://../../migrations", "postgres", driver)
+	m, err := migrate.NewWithDatabaseInstance("file://../migrations", "postgres", driver)
 	if err != nil {
 		t.Skip("Unable to initialize migrations")
 	}
