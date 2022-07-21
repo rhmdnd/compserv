@@ -303,7 +303,7 @@ func TestMigration(t *testing.T) { // nolint:paralleltest // database tests shou
 	// Upgrade the database and make sure all upgrades apply cleanly.
 	err = m.Up()
 	version, dirty, _ = m.Version()
-	expectedVersion = uint(8)
+	expectedVersion = uint(9)
 	assert.Equal(t, expectedVersion, version, "Database version mismatch: want %d but got %d", expectedVersion, version)
 	assert.Equal(t, false, dirty, "Database state mismatch: want %t but got %t", false, dirty)
 	assert.Equal(t, err, nil, "Error upgrading the database: %s", err)
@@ -456,6 +456,63 @@ func TestAssessmentMigration(t *testing.T) { // nolint:paralleltest // database 
 	assert.False(t, result, "Table exist: %s", tableName)
 }
 
+func TestResultMigration(t *testing.T) { // nolint:paralleltest // database tests should run serially
+	m := getMigrationHelper(t)
+	gormDB := getGormHelper()
+	tableName := "results"
+
+	if err := m.Migrate(8); err != nil {
+		t.Fatalf("Unable to upgrade database: %s", err)
+	}
+
+	// Ensure the metadata table doesn't exist before the upgrade
+	result := gormDB.Migrator().HasTable(tableName)
+	assert.False(t, result, "Table exists prior to migration: %s", tableName)
+
+	// Ensure the table exists after running the migration
+	if err := m.Migrate(9); err != nil {
+		t.Fatalf("Unable to upgrade database: %s", err)
+	}
+
+	result = gormDB.Migrator().HasTable(tableName)
+	assert.True(t, result, "Table doesn't exist: %s", tableName)
+
+	// Check to make sure it has the expected columns
+	type results struct{}
+	columns := []string{
+		"id", "name", "outcome", "instruction",
+		"rationale", "control_id", "metadata_id", "subject_id",
+		"assessment_id",
+	}
+	for _, s := range columns {
+		result = gormDB.Migrator().HasColumn(&results{}, s)
+		assert.True(t, result, "Column doesn't exist: %s", s)
+	}
+
+	constraintName := "fk_results_control_id"
+	result = gormDB.Migrator().HasConstraint(&results{}, constraintName)
+	assert.True(t, result, "Table doesn't have constraint: %s", constraintName)
+
+	constraintName = "fk_results_metadata_id"
+	result = gormDB.Migrator().HasConstraint(&results{}, constraintName)
+	assert.True(t, result, "Table doesn't have constraint: %s", constraintName)
+
+	constraintName = "fk_results_subject_id"
+	result = gormDB.Migrator().HasConstraint(&results{}, constraintName)
+	assert.True(t, result, "Table doesn't have constraint: %s", constraintName)
+
+	constraintName = "fk_results_assessment_id"
+	result = gormDB.Migrator().HasConstraint(&results{}, constraintName)
+	assert.True(t, result, "Table doesn't have constraint: %s", constraintName)
+
+	// Ensure the table is removed on downgrade
+	if err := m.Migrate(8); err != nil {
+		t.Fatalf("Unable to upgrade database: %s", err)
+	}
+	result = gormDB.Migrator().HasTable(tableName)
+	assert.False(t, result, "Table exists after downgrade: %s", tableName)
+}
+
 func TestInsertAssessmentSucceeds(t *testing.T) { // nolint:paralleltest // database tests should run serially
 	m := getMigrationHelper(t)
 	gormDB := getGormHelper()
@@ -463,7 +520,6 @@ func TestInsertAssessmentSucceeds(t *testing.T) { // nolint:paralleltest // data
 	if err := m.Migrate(4); err != nil {
 		t.Fatalf("Unable to upgrade database: %s", err)
 	}
-
 	id := getUUIDString()
 	metadataID, err := insertMetadata()
 	if err != nil {
@@ -471,15 +527,77 @@ func TestInsertAssessmentSucceeds(t *testing.T) { // nolint:paralleltest // data
 	}
 	name := getUUIDString()
 
-	assessment := Assessments{ID: id, Name: name, MetadataID: metadataID}
+	assessment := Assessment{ID: id, Name: name, MetadataID: metadataID}
 	err = gormDB.Create(&assessment).Error
 	assert.Nil(t, err)
 
-	a := Assessments{}
+	a := Assessment{}
 	gormDB.First(&a, "id = ?", id)
 
-	e := Assessments{ID: id, Name: name, MetadataID: metadataID}
+	e := Assessment{ID: id, Name: name, MetadataID: metadataID}
 	assert.Equal(t, e.ID, a.ID, "expected %s got %s", e.ID, a.ID)
 	assert.Equal(t, e.Name, a.Name, "expected %s got %s", e.Name, a.Name)
 	assert.Equal(t, e.MetadataID, a.MetadataID, "expected %s got %s", e.MetadataID, a.MetadataID)
+}
+
+func TestInsertResultSucceeds(t *testing.T) { // nolint:paralleltest // database tests should run serially
+	m := getMigrationHelper(t)
+	gormDB := getGormHelper()
+
+	if err := m.Migrate(9); err != nil {
+		t.Fatalf("Unable to upgrade database: %s", err)
+	}
+
+	metadataID, err := insertMetadata()
+	if err != nil {
+		t.Fatalf("Unable to create necessary metadata: %s", err)
+	}
+	subjectID, err := insertSubject()
+	if err != nil {
+		t.Fatalf("Unable to create necessary subject: %s", err)
+	}
+	controlID, err := insertControl()
+	if err != nil {
+		t.Fatalf("Unable to create necessary control: %s", err)
+	}
+	assessmentID, err := insertAssessment()
+	if err != nil {
+		t.Fatalf("Unable to create necessary assessment: %s", err)
+	}
+
+	id := getUUIDString()
+	name := getUUIDString()
+	outcome := getUUIDString()
+	instruction := strings.Repeat(getUUIDString(), 100)
+	rationale := getUUIDString()
+
+	r := Result{
+		ID: id, Name: name, ControlID: controlID,
+		Outcome: outcome, Instruction: instruction,
+		Rationale: rationale, MetadataID: metadataID,
+		SubjectID: subjectID, AssessmentID: assessmentID,
+	}
+
+	err = gormDB.Create(&r).Error
+	assert.Nil(t, err)
+
+	a := Result{}
+	gormDB.First(&a, "id = ?", id)
+
+	e := Result{
+		ID: id, Name: name, ControlID: controlID,
+		Outcome: outcome, Instruction: instruction,
+		Rationale: rationale, MetadataID: metadataID,
+		SubjectID: subjectID, AssessmentID: assessmentID,
+	}
+
+	assert.Equal(t, e.ID, a.ID, "expected %s got %s", e.ID, a.ID)
+	assert.Equal(t, e.Name, a.Name, "expected %s got %s", e.Name, a.Name)
+	assert.Equal(t, e.ControlID, a.ControlID, "expected %s got %s", e.ControlID, a.ControlID)
+	assert.Equal(t, e.Outcome, a.Outcome, "expected %s got %s", e.Outcome, a.Outcome)
+	assert.Equal(t, e.Instruction, a.Instruction, "expected %s got %s", e.Instruction, a.Instruction)
+	assert.Equal(t, e.Rationale, a.Rationale, "expected %s got %s", e.Rationale, a.Rationale)
+	assert.Equal(t, e.MetadataID, a.MetadataID, "expected %s got %s", e.MetadataID, a.MetadataID)
+	assert.Equal(t, e.SubjectID, a.SubjectID, "expected %s got %s", e.SubjectID, a.SubjectID)
+	assert.Equal(t, e.AssessmentID, a.AssessmentID, "expected %s got %s", e.AssessmentID, a.AssessmentID)
 }

@@ -15,7 +15,29 @@ import (
 	"gorm.io/gorm"
 )
 
-type Assessments struct {
+type Catalog struct {
+	ID         string
+	Name       string
+	MetadataID string
+	Content    string
+}
+
+type Profile struct {
+	ID         string
+	Name       string
+	MetadataID string
+	CatalogID  string
+}
+
+type Control struct {
+	ID         string
+	Name       string
+	Severity   string
+	ProfileID  string
+	MetadataID string
+}
+
+type Assessment struct {
 	ID         string
 	Name       string
 	MetadataID string
@@ -35,6 +57,18 @@ type Subject struct {
 	Type       string
 	ParentID   sql.NullString
 	MetadataID sql.NullString
+}
+
+type Result struct {
+	ID           string
+	Name         string
+	Outcome      string
+	Instruction  string
+	Rationale    string
+	ControlID    string
+	MetadataID   string
+	SubjectID    string
+	AssessmentID string
 }
 
 func getDatabaseConnection(t *testing.T) *sql.DB {
@@ -122,6 +156,103 @@ func insertMetadata() (string, error) {
 
 	md := Metadata{ID: id, CreatedAt: createdAt, UpdatedAt: updatedAt, Version: version, Description: description}
 	if err := gormDB.Create(&md).Error; err != nil {
+		return "", err
+	}
+
+	return id, nil
+}
+
+func insertSubject() (string, error) {
+	gormDB := getGormHelper()
+
+	id := getUUIDString()
+	name := getUUIDString()
+	subjectTypeStr := getUUIDString()
+
+	s := Subject{ID: id, Name: name, Type: subjectTypeStr}
+	if err := gormDB.Create(&s).Error; err != nil {
+		return "", err
+	}
+
+	return id, nil
+}
+
+func insertControl() (string, error) {
+	gormDB := getGormHelper()
+
+	id := getUUIDString()
+	name := getUUIDString()
+	metadataID, err := insertMetadata()
+	if err != nil {
+		return "", err
+	}
+	profileID, err := insertProfile()
+	if err != nil {
+		return "", err
+	}
+	severity := getUUIDString()
+
+	c := Control{ID: id, Name: name, Severity: severity, ProfileID: profileID, MetadataID: metadataID}
+	if err := gormDB.Create(&c).Error; err != nil {
+		return "", err
+	}
+
+	return id, nil
+}
+
+func insertProfile() (string, error) {
+	gormDB := getGormHelper()
+
+	id := getUUIDString()
+	name := getUUIDString()
+	metadataID, err := insertMetadata()
+	if err != nil {
+		return "", err
+	}
+	catalogID, err := insertCatalog()
+	if err != nil {
+		return "", err
+	}
+
+	p := Profile{ID: id, Name: name, MetadataID: metadataID, CatalogID: catalogID}
+	if err := gormDB.Create(&p).Error; err != nil {
+		return "", err
+	}
+
+	return id, nil
+}
+
+func insertCatalog() (string, error) {
+	gormDB := getGormHelper()
+
+	id := getUUIDString()
+	name := getUUIDString()
+	metadataID, err := insertMetadata()
+	if err != nil {
+		return "", err
+	}
+	content := getUUIDString()
+
+	c := Catalog{ID: id, Name: name, MetadataID: metadataID, Content: content}
+	if err := gormDB.Create(&c).Error; err != nil {
+		return "", err
+	}
+
+	return id, nil
+}
+
+func insertAssessment() (string, error) {
+	gormDB := getGormHelper()
+
+	id := getUUIDString()
+	name := getUUIDString()
+	metadataID, err := insertMetadata()
+	if err != nil {
+		return "", err
+	}
+
+	c := Assessment{ID: id, Name: name, MetadataID: metadataID}
+	if err := gormDB.Create(&c).Error; err != nil {
 		return "", err
 	}
 
