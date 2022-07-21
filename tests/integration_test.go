@@ -187,6 +187,84 @@ func TestInsertSubjectWithLongTypeFails(t *testing.T) { // nolint:paralleltest /
 	}
 }
 
+func TestMetadataMigration(t *testing.T) { // nolint:paralleltest // database tests should run serially
+	m := getMigrationHelper(t)
+	gormDB := getGormHelper()
+	tableName := "metadata"
+
+	if err := m.Migrate(1); err != nil {
+		t.Fatalf("Unable to upgrade database: %s", err)
+	}
+
+	// Ensure the metadata table doesn't exist before the upgrade
+	result := gormDB.Migrator().HasTable(tableName)
+	assert.False(t, result, "Table exists prior to migration: %s", tableName)
+
+	// Ensure the table exists after running the migration
+	if err := m.Migrate(2); err != nil {
+		t.Fatalf("Unable to upgrade database: %s", err)
+	}
+
+	result = gormDB.Migrator().HasTable(tableName)
+	assert.True(t, result, "Table doesn't exist: %s", tableName)
+
+	// Check to make sure it has the expected columns
+	type metadata struct{}
+	for _, s := range []string{"id", "created_at", "updated_at", "version", "description"} {
+		result = gormDB.Migrator().HasColumn(&metadata{}, s)
+		assert.True(t, result, "Column doesn't exist: %s", s)
+	}
+
+	// Ensure the table is removed on downgrade
+	if err := m.Migrate(1); err != nil {
+		t.Fatalf("Unable to upgrade database: %s", err)
+	}
+	result = gormDB.Migrator().HasTable(tableName)
+	assert.False(t, result, "Table exists after downgrade: %s", tableName)
+
+	if err := m.Drop(); err != nil {
+		t.Fatalf("Unable to drop database: %s", err)
+	}
+}
+
+func TestInsertMetadataSucceeds(t *testing.T) { // nolint:paralleltest // database tests should run serially
+	m := getMigrationHelper(t)
+	gormDB := getGormHelper()
+
+	if err := m.Migrate(2); err != nil {
+		t.Fatalf("Unable to upgrade database: %s", err)
+	}
+
+	id := getUUIDString()
+	// time.Now().UTC() will return a time.Time struct with microsecond
+	// precision, but the timestamp type in PostgreSQL is not microsecond
+	// precise. Round off the microsecond precision to model what the
+	// database actually gives us.
+	createdAt := time.Now().UTC().Round(time.Microsecond)
+	updatedAt := time.Now().UTC().Round(time.Microsecond)
+	version := getUUIDString()
+	description := getUUIDString()
+
+	md := Metadata{ID: id, CreatedAt: createdAt, UpdatedAt: updatedAt, Version: version, Description: description}
+	err := gormDB.Create(&md).Error
+	assert.Nil(t, err)
+
+	metadata := Metadata{}
+	gormDB.First(&metadata, "id = ?", id)
+	fmt.Println(metadata.UpdatedAt)
+
+	expectedMetadata := Metadata{ID: id, CreatedAt: createdAt, UpdatedAt: updatedAt, Version: version, Description: description}
+	assert.Equal(t, expectedMetadata.ID, metadata.ID, "expected %s got %s", expectedMetadata.ID, metadata.ID)
+	assert.Equal(t, expectedMetadata.CreatedAt, metadata.CreatedAt, "expected %s got %s", expectedMetadata.CreatedAt, metadata.CreatedAt)
+	assert.Equal(t, expectedMetadata.UpdatedAt, metadata.UpdatedAt, "expected %s got %s", expectedMetadata.UpdatedAt, metadata.UpdatedAt)
+	assert.Equal(t, expectedMetadata.Version, metadata.Version, "expected %s got %s", expectedMetadata.Version, metadata.Version)
+	assert.Equal(t, expectedMetadata.Description, metadata.Description, "expected %s got %s", expectedMetadata.Description, metadata.Description)
+
+	if err := m.Drop(); err != nil {
+		t.Fatalf("Unable to drop database: %s", err)
+	}
+}
+
 func TestMigration(t *testing.T) { // nolint:paralleltest // database tests should run serially
 	m := getMigrationHelper(t)
 
@@ -205,7 +283,7 @@ func TestMigration(t *testing.T) { // nolint:paralleltest // database tests shou
 	// Upgrade the database and make sure all upgrades apply cleanly.
 	err = m.Up()
 	version, dirty, _ = m.Version()
-	expectedVersion = uint(1)
+	expectedVersion = uint(2)
 	assert.Equal(t, expectedVersion, version, "Database version mismatch: want %d but got %d", expectedVersion, version)
 	assert.Equal(t, false, dirty, "Database state mismatch: want %t but got %t", false, dirty)
 	assert.Equal(t, err, nil, "Error upgrading the database: %s", err)
