@@ -6,7 +6,6 @@ require (
 	github.com/aws/aws-sdk-go v1.44.59
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/google/uuid v1.3.0
-	github.com/lib/pq v1.10.6
 	github.com/spf13/viper v1.12.0
 	github.com/stretchr/testify v1.8.0
 	google.golang.org/grpc v1.48.0
@@ -33,6 +32,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.4 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/lib/pq v1.10.6 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
