@@ -3,7 +3,6 @@ package tests
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"net"
 	"testing"
 	"time"
@@ -38,8 +37,7 @@ func getDatabaseConnection(t *testing.T) *sql.DB {
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		msg := fmt.Sprintf("Unable to initialize connection to test database: %s", err)
-		t.Skip(msg)
+		t.Skipf("Unable to initialize connection to test database: %s", err)
 	}
 
 	// Wait up to 30 seconds to establish a connection with the database.
@@ -64,8 +62,7 @@ func getDatabaseConnection(t *testing.T) *sql.DB {
 				time.Sleep(duration)
 				continue
 			} else {
-				msg := fmt.Sprintf("Unable to establish connection to test database: %s", err)
-				t.Skip(msg)
+				t.Skipf("Unable to establish connection to test database: %s", err)
 			}
 		}
 	}
@@ -79,11 +76,11 @@ func getMigrationHelper(t *testing.T) *migrate.Migrate {
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		t.Skip("Unable to initialize database driver for migrations")
+		t.Skipf("Unable to initialize database driver for migrations: %s", err)
 	}
 	m, err := migrate.NewWithDatabaseInstance("file://../migrations", "postgres", driver)
 	if err != nil {
-		t.Skip("Unable to initialize migrations")
+		t.Skipf("Unable to initialize migrations: %s", err)
 	}
 	return m
 }
