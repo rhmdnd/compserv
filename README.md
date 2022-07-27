@@ -9,12 +9,27 @@ The service should be deployed with containers, ideally for Kubernetes-based
 platforms. Also, the service will initially store compliance data for
 Kubernetes deployments.
 
-## Design Goals
+## Design
+
+The following goals and decisions are documented here to establish consistency
+within the service. Changes to this list should require an open issue for
+discussion.
+
+### Goals
 
 1. Object models specific to compliance concepts must remain generic, so the
    service can be flexible for other implementations
 2. Any tools required to run the service must be automated or scripted, and
    included in this repository with documentation
+
+### Decisions
+
+1. Each entity must contain a unique identifier, where it is unique within the
+   system. A version 4 UUID as defined by [RFC
+   4122](https://datatracker.ietf.org/doc/html/rfc4122) is sufficient for uniqueness.
+2. Dates and times must be Coordinated Universal Time (UTC) without reference
+   to a timezone. Clients are responsible for converting to locale-specific
+   date formats.
 
 ## Architecture
 
