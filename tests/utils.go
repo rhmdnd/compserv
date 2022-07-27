@@ -16,6 +16,14 @@ import (
 	"gorm.io/gorm"
 )
 
+type Metadata struct {
+	ID          string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Version     string
+	Description string
+}
+
 type Subject struct {
 	ID   string
 	Name string
