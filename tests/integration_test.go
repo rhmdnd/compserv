@@ -170,7 +170,6 @@ func TestInsertMetadataSucceeds(t *testing.T) { // nolint:paralleltest // databa
 
 	a := Metadata{}
 	gormDB.First(&a, "id = ?", id)
-	fmt.Println(a.UpdatedAt)
 
 	e := Metadata{ID: id, CreatedAt: createdAt, UpdatedAt: updatedAt, Version: version, Description: description}
 	assert.Equal(t, e.ID, a.ID, "expected %s got %s", e.ID, a.ID)
