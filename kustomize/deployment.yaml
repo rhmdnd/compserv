@@ -19,6 +19,8 @@ spec:
       - image: postgres:13-alpine
         name: postgres
         env:
+          - name: PGDATA
+            value: /var/lib/postgres/data
           - name: POSTGRES_PASSWORD
             valueFrom:
               secretKeyRef:
