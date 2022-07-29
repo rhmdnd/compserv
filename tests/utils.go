@@ -30,10 +30,11 @@ type Metadata struct {
 }
 
 type Subject struct {
-	ID       string
-	Name     string
-	Type     string
-	ParentID sql.NullString
+	ID         string
+	Name       string
+	Type       string
+	ParentID   sql.NullString
+	MetadataID sql.NullString
 }
 
 func getDatabaseConnection(t *testing.T) *sql.DB {
