@@ -379,12 +379,6 @@ func TestAssessmentMigration(t *testing.T) { // nolint:paralleltest // database 
 	}
 	result = gormDB.Migrator().HasTable(tableName)
 	assert.False(t, result, "Table exist: %s", tableName)
-
-	// Drop the database instead of downgrading since we don't need the
-	// data anyway
-	if err := m.Drop(); err != nil {
-		t.Fatalf("Unable to drop database: %s", err)
-	}
 }
 
 func TestInsertAssessmentSucceeds(t *testing.T) { // nolint:paralleltest // database tests should run serially
@@ -413,10 +407,4 @@ func TestInsertAssessmentSucceeds(t *testing.T) { // nolint:paralleltest // data
 	assert.Equal(t, e.ID, a.ID, "expected %s got %s", e.ID, a.ID)
 	assert.Equal(t, e.Name, a.Name, "expected %s got %s", e.Name, a.Name)
 	assert.Equal(t, e.MetadataID, a.MetadataID, "expected %s got %s", e.MetadataID, a.MetadataID)
-
-	// Drop the database instead of downgrading since we don't need the
-	// data anyway
-	if err := m.Drop(); err != nil {
-		t.Fatalf("Unable to drop database: %s", err)
-	}
 }
