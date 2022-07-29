@@ -83,6 +83,13 @@ func getMigrationHelper(t *testing.T) *migrate.Migrate {
 	if err != nil {
 		t.Skipf("Unable to initialize migrations: %s", err)
 	}
+	t.Cleanup(func() {
+		// Drop the database instead of downgrading since we don't need
+		// the data anyway
+		if err = m.Drop(); err != nil {
+			t.Fatalf("Unable to cleanup database: %s", err)
+		}
+	})
 	return m
 }
 
