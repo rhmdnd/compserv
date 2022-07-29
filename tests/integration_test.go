@@ -39,12 +39,6 @@ func TestInsertSubjectSucceeds(t *testing.T) { // nolint:paralleltest // databas
 	assert.False(t, subject.ParentID.Valid)
 	assert.Nil(t, err)
 	assert.Nil(t, parentIDValue)
-
-	// Drop the database instead of downgrading since we don't need the
-	// data anyway
-	if err := m.Drop(); err != nil {
-		t.Fatalf("Unable to drop database: %s", err)
-	}
 }
 
 func TestInsertSubjectWithLongNameFails(t *testing.T) { // nolint:paralleltest // database tests should run serially
@@ -62,11 +56,6 @@ func TestInsertSubjectWithLongNameFails(t *testing.T) { // nolint:paralleltest /
 	gormDB := getGormHelper()
 	err := gormDB.Create(&s).Error
 	assert.NotEmpty(t, err, "Shouldn't be able to insert name values longer than 255 characters")
-	// Drop the database instead of downgrading since we don't need the
-	// data anyway
-	if err := m.Drop(); err != nil {
-		t.Fatalf("Unable to drop database: %s", err)
-	}
 }
 
 func TestInsertSubjectWithNonUUIDFails(t *testing.T) { // nolint:paralleltest // database tests should run serially
@@ -83,11 +72,6 @@ func TestInsertSubjectWithNonUUIDFails(t *testing.T) { // nolint:paralleltest //
 	err := gormDB.Create(&s).Error
 	fmt.Print(err)
 	assert.NotEmpty(t, err, "Expect an error when creating IDs of the wrong type.")
-	// Drop the database instead of downgrading since we don't need the
-	// data anyway
-	if err := m.Drop(); err != nil {
-		t.Fatalf("Unable to drop database: %s", err)
-	}
 }
 
 func TestInsertSubjectWithLongTypeFails(t *testing.T) { // nolint:paralleltest // database tests should run serially
@@ -104,11 +88,6 @@ func TestInsertSubjectWithLongTypeFails(t *testing.T) { // nolint:paralleltest /
 	gormDB := getGormHelper()
 	err := gormDB.Create(&s).Error
 	assert.NotEmpty(t, err, "Shouldn't be able to insert type values longer than 50 characters")
-	// Drop the database instead of downgrading since we don't need the
-	// data anyway
-	if err := m.Drop(); err != nil {
-		t.Fatalf("Unable to drop database: %s", err)
-	}
 }
 
 func TestMetadataMigration(t *testing.T) { // nolint:paralleltest // database tests should run serially
@@ -145,10 +124,6 @@ func TestMetadataMigration(t *testing.T) { // nolint:paralleltest // database te
 	}
 	result = gormDB.Migrator().HasTable(tableName)
 	assert.False(t, result, "Table exists after downgrade: %s", tableName)
-
-	if err := m.Drop(); err != nil {
-		t.Fatalf("Unable to drop database: %s", err)
-	}
 }
 
 func TestInsertMetadataSucceeds(t *testing.T) { // nolint:paralleltest // database tests should run serially
@@ -212,12 +187,6 @@ func TestInsertSubjectWithParent(t *testing.T) { // nolint:paralleltest // datab
 	assert.Equal(t, e.Type, a.Type, "expected %s got %s", e.Type, a.Type)
 	assert.True(t, a.ParentID.Valid)
 	assert.Equal(t, e.ParentID.String, a.ParentID.String, "expected %s got %s", e.ParentID.String, a.ParentID.String)
-
-	// Drop the database instead of downgrading since we don't need the
-	// data anyway
-	if err := m.Drop(); err != nil {
-		t.Fatalf("Unable to drop database: %s", err)
-	}
 }
 
 func TestDeleteSubjectWithParent(t *testing.T) { // nolint:paralleltest // database tests should run serially
@@ -270,12 +239,6 @@ func TestDeleteSubjectWithParent(t *testing.T) { // nolint:paralleltest // datab
 	result = gormDB.Find(&subjects)
 	expectedSubjects = int64(0)
 	assert.Equal(t, expectedSubjects, result.RowsAffected, "expected %d got %d", expectedSubjects, result.RowsAffected)
-
-	// Drop the database instead of downgrading since we don't need the
-	// data anyway
-	if err := m.Drop(); err != nil {
-		t.Fatalf("Unable to drop database: %s", err)
-	}
 }
 
 func TestInsertSubjectWithNonExistentParent(t *testing.T) { // nolint:paralleltest // database tests should run serially
@@ -294,12 +257,6 @@ func TestInsertSubjectWithNonExistentParent(t *testing.T) { // nolint:parallelte
 	gormDB := getGormHelper()
 	err := gormDB.Create(&s).Error
 	assert.NotEmpty(t, err, "Shouldn't be able to insert values that violate foreign key constraints")
-
-	// Drop the database instead of downgrading since we don't need the
-	// data anyway
-	if err := m.Drop(); err != nil {
-		t.Fatalf("Unable to drop database: %s", err)
-	}
 }
 
 func TestMigration(t *testing.T) { // nolint:paralleltest // database tests should run serially
