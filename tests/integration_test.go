@@ -95,8 +95,9 @@ func TestMetadataMigration(t *testing.T) { // nolint:paralleltest // database te
 	gormDB := getGormHelper()
 	tableName := "metadata"
 
-	if err := m.Migrate(1); err != nil {
-		t.Fatalf("Unable to upgrade database: %s", err)
+	version := uint(1)
+	if err := m.Migrate(version); err != nil {
+		t.Fatalf("Unable to upgrade database to version %d: %s", version, err)
 	}
 
 	// Ensure the metadata table doesn't exist before the upgrade
@@ -104,8 +105,9 @@ func TestMetadataMigration(t *testing.T) { // nolint:paralleltest // database te
 	assert.False(t, result, "Table exists prior to migration: %s", tableName)
 
 	// Ensure the table exists after running the migration
-	if err := m.Migrate(2); err != nil {
-		t.Fatalf("Unable to upgrade database: %s", err)
+	version = uint(2)
+	if err := m.Migrate(version); err != nil {
+		t.Fatalf("Unable to upgrade database to version %d: %s", version, err)
 	}
 
 	result = gormDB.Migrator().HasTable(tableName)
@@ -119,8 +121,9 @@ func TestMetadataMigration(t *testing.T) { // nolint:paralleltest // database te
 	}
 
 	// Ensure the table is removed on downgrade
-	if err := m.Migrate(1); err != nil {
-		t.Fatalf("Unable to upgrade database: %s", err)
+	version = uint(1)
+	if err := m.Migrate(version); err != nil {
+		t.Fatalf("Unable to upgrade database to version %d: %s", version, err)
 	}
 	result = gormDB.Migrator().HasTable(tableName)
 	assert.False(t, result, "Table exists after downgrade: %s", tableName)
@@ -131,7 +134,7 @@ func TestInsertMetadataSucceeds(t *testing.T) { // nolint:paralleltest // databa
 	gormDB := getGormHelper()
 
 	if err := m.Migrate(2); err != nil {
-		t.Fatalf("Unable to upgrade database: %s", err)
+		t.Fatalf("Unable to upgrade database to version %d: %s", 2, err)
 	}
 
 	id := getUUIDString()
@@ -299,8 +302,9 @@ func TestSubjectParentIDMigration(t *testing.T) { // nolint:paralleltest // data
 	tableName := "subjects"
 	columnName := "parent_id"
 
-	if err := m.Migrate(2); err != nil {
-		t.Fatalf("Unable to migrate to version %d: %s", 1, err)
+	version := uint(2)
+	if err := m.Migrate(version); err != nil {
+		t.Fatalf("Unable to migrate to version %d: %s", version, err)
 	}
 	result := gormDB.Migrator().HasTable(tableName)
 	assert.True(t, result, "Table doesn't exist: %s", tableName)
@@ -313,8 +317,9 @@ func TestSubjectParentIDMigration(t *testing.T) { // nolint:paralleltest // data
 	assert.False(t, result, "Table has column: %s", columnName)
 
 	// Ensure the upgrade adds the parent_id column and the constraint
-	if err := m.Migrate(3); err != nil {
-		t.Fatalf("Unable to migrate to version %d: %s", 2, err)
+	version = uint(3)
+	if err := m.Migrate(version); err != nil {
+		t.Fatalf("Unable to migrate to version %d: %s", version, err)
 	}
 	result = gormDB.Migrator().HasTable(tableName)
 	assert.True(t, result, "Table doesn't exist: %s", tableName)
@@ -330,8 +335,9 @@ func TestSubjectParentIDMigration(t *testing.T) { // nolint:paralleltest // data
 
 	// Make sure the downgrade removes the parent_id column and the
 	// constraint
-	if err := m.Migrate(2); err != nil {
-		t.Fatalf("Unable to migrate to version %d: %s", 1, err)
+	version = uint(2)
+	if err := m.Migrate(version); err != nil {
+		t.Fatalf("Unable to migrate to version %d: %s", 2, err)
 	}
 	result = gormDB.Migrator().HasColumn(&subject{}, columnName)
 	assert.False(t, result, "Table has column: %s", columnName)
