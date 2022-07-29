@@ -321,7 +321,7 @@ func TestMigration(t *testing.T) { // nolint:paralleltest // database tests shou
 	// Upgrade the database and make sure all upgrades apply cleanly.
 	err = m.Up()
 	version, dirty, _ = m.Version()
-	expectedVersion = uint(3)
+	expectedVersion = uint(4)
 	assert.Equal(t, expectedVersion, version, "Database version mismatch: want %d but got %d", expectedVersion, version)
 	assert.Equal(t, false, dirty, "Database state mismatch: want %t but got %t", false, dirty)
 	assert.Equal(t, err, nil, "Error upgrading the database: %s", err)
@@ -382,4 +382,79 @@ func TestSubjectParentIDMigration(t *testing.T) { // nolint:paralleltest // data
 
 	result = gormDB.Migrator().HasConstraint(&subject{}, constraintName)
 	assert.False(t, result, "Table has constraint: %s", constraintName)
+}
+
+func TestAssessmentMigration(t *testing.T) { // nolint:paralleltest // database tests should run serially
+	m := getMigrationHelper(t)
+	gormDB := getGormHelper()
+
+	type assessments struct{}
+	tableName := "assessments"
+
+	if err := m.Migrate(3); err != nil {
+		t.Fatalf("Unable to migrate to version %d: %s", 1, err)
+	}
+	result := gormDB.Migrator().HasTable(tableName)
+	assert.False(t, result, "Table exist: %s", tableName)
+
+	if err := m.Migrate(4); err != nil {
+		t.Fatalf("Unable to migrate to version %d: %s", 4, err)
+	}
+	result = gormDB.Migrator().HasTable(tableName)
+	assert.True(t, result, "Table doesn't exist: %s", tableName)
+
+	for _, s := range []string{"id", "name", "metadata_id"} {
+		result = gormDB.Migrator().HasColumn(&assessments{}, s)
+		assert.True(t, result, "Table doesn't have column: %s", s)
+	}
+
+	constraintName := "fk_assessments_metadata_id"
+	result = gormDB.Migrator().HasConstraint(&assessments{}, constraintName)
+	assert.True(t, result, "Table doesn't have constraint: %s", constraintName)
+
+	if err := m.Migrate(3); err != nil {
+		t.Fatalf("Unable to migrate to version %d: %s", 3, err)
+	}
+	result = gormDB.Migrator().HasTable(tableName)
+	assert.False(t, result, "Table exist: %s", tableName)
+
+	// Drop the database instead of downgrading since we don't need the
+	// data anyway
+	if err := m.Drop(); err != nil {
+		t.Fatalf("Unable to drop database: %s", err)
+	}
+}
+
+func TestInsertAssessmentSucceeds(t *testing.T) { // nolint:paralleltest // database tests should run serially
+	m := getMigrationHelper(t)
+	gormDB := getGormHelper()
+
+	if err := m.Migrate(4); err != nil {
+		t.Fatalf("Unable to upgrade database: %s", err)
+	}
+
+	id := getUUIDString()
+	metadataID, err := insertMetadata()
+	if err != nil {
+		t.Fatalf("Unable to create metadata: %s", err)
+	}
+	name := getUUIDString()
+
+	assessment := Assessments{ID: id, Name: name, MetadataID: metadataID}
+	err = gormDB.Create(&assessment).Error
+	assert.Nil(t, err)
+
+	a := Assessments{}
+	gormDB.First(&a, "id = ?", id)
+
+	e := Assessments{ID: id, Name: name, MetadataID: metadataID}
+	assert.Equal(t, e.ID, a.ID, "expected %s got %s", e.ID, a.ID)
+	assert.Equal(t, e.Name, a.Name, "expected %s got %s", e.Name, a.Name)
+	assert.Equal(t, e.MetadataID, a.MetadataID, "expected %s got %s", e.MetadataID, a.MetadataID)
+
+	// Drop the database instead of downgrading since we don't need the
+	// data anyway
+	if err := m.Drop(); err != nil {
+		t.Fatalf("Unable to drop database: %s", err)
+	}
 }

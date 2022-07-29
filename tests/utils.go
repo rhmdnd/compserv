@@ -15,6 +15,12 @@ import (
 	"gorm.io/gorm"
 )
 
+type Assessments struct {
+	ID         string
+	Name       string
+	MetadataID string
+}
+
 type Metadata struct {
 	ID          string
 	CreatedAt   time.Time
@@ -95,4 +101,21 @@ func getGormHelper() *gorm.DB {
 func getUUIDString() string {
 	value, _ := uuid.NewRandom()
 	return value.String()
+}
+
+func insertMetadata() (string, error) {
+	gormDB := getGormHelper()
+
+	id := getUUIDString()
+	createdAt := time.Now().UTC().Round(time.Microsecond)
+	updatedAt := time.Now().UTC().Round(time.Microsecond)
+	version := getUUIDString()
+	description := getUUIDString()
+
+	md := Metadata{ID: id, CreatedAt: createdAt, UpdatedAt: updatedAt, Version: version, Description: description}
+	if err := gormDB.Create(&md).Error; err != nil {
+		return "", err
+	}
+
+	return id, nil
 }
