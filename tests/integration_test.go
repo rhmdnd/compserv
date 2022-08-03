@@ -262,6 +262,29 @@ func TestInsertSubjectWithNonExistentParent(t *testing.T) { // nolint:parallelte
 	assert.NotEmpty(t, err, "Shouldn't be able to insert values that violate foreign key constraints")
 }
 
+func TestInsertSubjectWithMetadata(t *testing.T) { // nolint:paralleltest // database tests should run serially
+	m := getMigrationHelper(t)
+	if err := m.Up(); err != nil {
+		t.Fatalf("Unable to upgrade database: %s", err)
+	}
+
+	metadataID, err := insertMetadata()
+	if err != nil {
+		t.Fatalf("Unable to create metadata: %s", err)
+	}
+
+	// Create another subject referencing the parent
+	id := getUUIDString()
+	subjectTypeStr := getUUIDString()
+	s := Subject{
+		ID: id, Name: clusterName, Type: subjectTypeStr,
+		MetadataID: sql.NullString{String: metadataID, Valid: true},
+	}
+	gormDB := getGormHelper()
+	err = gormDB.Create(&s).Error
+	assert.Nil(t, err, "Unable to create subject with metadata")
+}
+
 func TestMigration(t *testing.T) { // nolint:paralleltest // database tests should run serially
 	m := getMigrationHelper(t)
 
@@ -280,7 +303,7 @@ func TestMigration(t *testing.T) { // nolint:paralleltest // database tests shou
 	// Upgrade the database and make sure all upgrades apply cleanly.
 	err = m.Up()
 	version, dirty, _ = m.Version()
-	expectedVersion = uint(4)
+	expectedVersion = uint(5)
 	assert.Equal(t, expectedVersion, version, "Database version mismatch: want %d but got %d", expectedVersion, version)
 	assert.Equal(t, false, dirty, "Database state mismatch: want %t but got %t", false, dirty)
 	assert.Equal(t, err, nil, "Error upgrading the database: %s", err)
@@ -338,6 +361,58 @@ func TestSubjectParentIDMigration(t *testing.T) { // nolint:paralleltest // data
 	version = uint(2)
 	if err := m.Migrate(version); err != nil {
 		t.Fatalf("Unable to migrate to version %d: %s", 2, err)
+	}
+	result = gormDB.Migrator().HasColumn(&subject{}, columnName)
+	assert.False(t, result, "Table has column: %s", columnName)
+
+	result = gormDB.Migrator().HasConstraint(&subject{}, constraintName)
+	assert.False(t, result, "Table has constraint: %s", constraintName)
+}
+
+func TestSubjectMetadataIDMigration(t *testing.T) { // nolint:paralleltest // database tests should run serially
+	m := getMigrationHelper(t)
+	gormDB := getGormHelper()
+
+	type subject struct{}
+	tableName := "subjects"
+	columnName := "metadata_id"
+
+	version := uint(4)
+	if err := m.Migrate(version); err != nil {
+		t.Fatalf("Unable to migrate to version %d: %s", version, err)
+	}
+	result := gormDB.Migrator().HasTable(tableName)
+	assert.True(t, result, "Table doesn't exist: %s", tableName)
+
+	for _, s := range []string{"id", "name", "type", "parent_id"} {
+		result = gormDB.Migrator().HasColumn(&subject{}, s)
+		assert.True(t, result, "Table doesn't have column: %s", s)
+	}
+	result = gormDB.Migrator().HasColumn(&subject{}, columnName)
+	assert.False(t, result, "Table has column: %s", columnName)
+
+	// Ensure the upgrade adds the metadata_id column and the constraint
+	version = uint(5)
+	if err := m.Migrate(version); err != nil {
+		t.Fatalf("Unable to migrate to version %d: %s", version, err)
+	}
+	result = gormDB.Migrator().HasTable(tableName)
+	assert.True(t, result, "Table doesn't have column: %s", tableName)
+
+	for _, s := range []string{"id", "name", "type", "parent_id", "metadata_id"} {
+		result = gormDB.Migrator().HasColumn(&subject{}, s)
+		assert.True(t, result, "Table doesn't have column: %s", s)
+	}
+
+	constraintName := "fk_subjects_metadata_id"
+	result = gormDB.Migrator().HasConstraint(&subject{}, constraintName)
+	assert.True(t, result, "Table doesn't have constraint: %s", constraintName)
+
+	// Make sure the downgrade removes the metadata_id column and the
+	// constraint
+	version = uint(4)
+	if err := m.Migrate(version); err != nil {
+		t.Fatalf("Unable to migrate to version %d: %s", version, err)
 	}
 	result = gormDB.Migrator().HasColumn(&subject{}, columnName)
 	assert.False(t, result, "Table has column: %s", columnName)
