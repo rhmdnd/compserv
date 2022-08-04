@@ -303,7 +303,7 @@ func TestMigration(t *testing.T) { // nolint:paralleltest // database tests shou
 	// Upgrade the database and make sure all upgrades apply cleanly.
 	err = m.Up()
 	version, dirty, _ = m.Version()
-	expectedVersion = uint(5)
+	expectedVersion = uint(6)
 	assert.Equal(t, expectedVersion, version, "Database version mismatch: want %d but got %d", expectedVersion, version)
 	assert.Equal(t, false, dirty, "Database state mismatch: want %t but got %t", false, dirty)
 	assert.Equal(t, err, nil, "Error upgrading the database: %s", err)
