@@ -471,14 +471,14 @@ func TestInsertAssessmentSucceeds(t *testing.T) { // nolint:paralleltest // data
 	}
 	name := getUUIDString()
 
-	assessment := Assessments{ID: id, Name: name, MetadataID: metadataID}
+	assessment := Assessment{ID: id, Name: name, MetadataID: metadataID}
 	err = gormDB.Create(&assessment).Error
 	assert.Nil(t, err)
 
-	a := Assessments{}
+	a := Assessment{}
 	gormDB.First(&a, "id = ?", id)
 
-	e := Assessments{ID: id, Name: name, MetadataID: metadataID}
+	e := Assessment{ID: id, Name: name, MetadataID: metadataID}
 	assert.Equal(t, e.ID, a.ID, "expected %s got %s", e.ID, a.ID)
 	assert.Equal(t, e.Name, a.Name, "expected %s got %s", e.Name, a.Name)
 	assert.Equal(t, e.MetadataID, a.MetadataID, "expected %s got %s", e.MetadataID, a.MetadataID)

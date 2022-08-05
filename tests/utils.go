@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Assessments struct {
+type Assessment struct {
 	ID         string
 	Name       string
 	MetadataID string
