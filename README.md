@@ -99,10 +99,24 @@ compliance service and a PostgreSQL database into a Kubernetes cluster.
 $ make deploy
 ```
 
-## Migrations
+## Database
+
+### Migrations
 
 Please refer to the [migrations documentation](./migrations/README.md) for
 instructions on creating and managing database migrations.
+
+### Schema
+
+The [schema](./migrations/schema.sql) for the service is documented alongside
+the migrations. This schema is rendered after the database is fully updated.
+Its goal is to reflect the schema in its entirety.
+
+You can render the schema using:
+
+```console
+$ make update-database-schema-docs
+```
 
 ## gRPC API
 

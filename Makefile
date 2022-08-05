@@ -35,6 +35,10 @@ test-migrate: $(TOOLS_DIR)/migrate
 test-database-integration:
 	./utils/run_integration_tests.sh
 
+.PHONY: update-database-schema-docs
+update-database-schema-docs:
+	./utils/update_schema_doc.sh
+
 .PHONY: verify
 verify: verify-go-lint
 
