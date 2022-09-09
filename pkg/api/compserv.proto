@@ -3,4 +3,26 @@ syntax = "proto3";
 option go_package = "github.com/rhmdnd/compserv";
 
 service ComplianceService {
+        rpc SetResult(ResultRequest) returns (ResultResponse) {}
 }
+
+message ResultRequest {
+        string subject = 1;
+        string control = 2;
+        string rule = 3;
+        string assessmentId = 4;
+        string outcome = 5;
+        string description = 6;
+        string severity = 7;
+        string instructions = 8;
+        map<string, string> extra = 9;
+}
+
+// This is empty for now but gives us the flexibility to return something in
+// the future. We should return status codes though, see
+// https://grpc.github.io/grpc/core/md_doc_statuscodes.html for an example of
+// what we should return.
+//
+// This will change in the future, but we'll have to agree on what this should
+// be before an official release even if this API is experimental.
+message ResultResponse {}

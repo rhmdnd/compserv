@@ -4,11 +4,14 @@ ARCH := $(shell go env GOARCH)
 MIGRATE_VERSION := v4.15.2
 GOLANGCI_LINT_VERSION := v1.46.2
 KUBECTL_VERSION := v1.24.1
+PROTOBUF_VERSION := 21.5
+PROTOBUF_TAG := v$(PROTOBUF_VERSION)
 
 BUILDS_DIR := builds
 TOOLS_DIR := tools
 MIGRATE?=
 KUBECTL = ./$(TOOLS_DIR)/kubectl
+PROTOC = ./$(TOOLS_DIR)/protoc
 
 .PHONY: $(BUILDS_DIR)
 $(BUILDS_DIR):
@@ -21,6 +24,10 @@ $(TOOLS_DIR):
 .PHONY: build
 build: $(BUILDS_DIR)
 	go build -o $(BUILDS_DIR) cmd/compserv-server.go
+
+.PHONY: grpc
+grpc: $(TOOLS_DIR)/protoc
+	$(PROTOC) --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative pkg/api/compserv.proto
 
 .PHONY: test
 test:
@@ -95,5 +102,28 @@ ifeq (,$(shell which kubectl 2>/dev/null))
 	}
 else
 KUBECTL = $(shell which kubectl)
+endif
+endif
+
+$(TOOLS_DIR)/protoc: $(TOOLS_DIR)
+# Check if tools/protoc exists - if it does then the default value provided
+# above will work.
+ifeq (,$(wildcard $(PROTOC)))
+# If tools/protoc doesn't exist, check if the binary exists somewhere else in
+# the path and use that. Otherwise, if we get back an empty string here we need
+# to download a copy of protoc and put it in the tools/ directory.
+ifeq (,$(shell which protoc 2>/dev/null))
+	@{ \
+	set -e ;\
+	curl -L -o tools/protoc-$(PROTOBUF_VERSION)-linux-x86_64.zip https://github.com/protocolbuffers/protobuf/releases/download/$(PROTOBUF_TAG)/protoc-$(PROTOBUF_VERSION)-linux-x86_64.zip ;\
+	unzip -j tools/protoc-$(PROTOBUF_VERSION)-linux-x86_64.zip "*protoc" -d tools ;\
+	chmod u+x $(PROTOC) ;\
+	rm tools/protoc-$(PROTOBUF_VERSION)-linux-x86_64.zip ;\
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest ;\
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest ;\
+	reset ;\
+	}
+else
+PROTOC = $(shell which protoc)
 endif
 endif
