@@ -2,6 +2,7 @@ FROM golang:1.18
 
 WORKDIR /app
 
+COPY migrations ./migrations/
 COPY Makefile ./Makefile
 COPY cmd ./cmd
 COPY pkg ./pkg

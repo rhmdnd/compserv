@@ -3,6 +3,7 @@
 # would ignore tools/ directories in dependencies, causing CI issues that are
 # hard to debug locally.
 builds/compserv-server
+builds/compserv-migrate
 tools/golangci-lint
 tools/kubectl
 tools/migrate

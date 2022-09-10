@@ -1,0 +1,14 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: compserv-config
+  namespace: compserv
+data:
+  config: |
+    database:
+      host: "postgres.compserv"
+      username: "postgres"
+      password:
+        provider: "kubernetes"
+        secret_name: "postgres-secret"
+        secret_namespace: "compserv"

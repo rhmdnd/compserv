@@ -26,7 +26,8 @@ $(TOOLS_DIR):
 
 .PHONY: build
 build: $(BUILDS_DIR)
-	go build -o $(BUILDS_DIR) cmd/compserv-server.go
+	go build -o $(BUILDS_DIR) cmd/server/compserv-server.go
+	go build -o $(BUILDS_DIR) cmd/migrate/compserv-migrate.go
 
 .PHONY: build-image
 build-image: $(BUILDS_DIR)
@@ -101,7 +102,9 @@ $(TOOLS_DIR)/golangci-lint:
 
 .PHONY: deploy
 deploy: $(TOOLS_DIR)/kubectl
+	sed -e 's%quay.io/compliance-service/compserv:latest%$(IMAGE_REPO):$(TAG)%' kustomize/deployment.yaml -i
 	$(KUBECTL) apply -k kustomize
+	sed -e 's%$(IMAGE_REPO):$(TAG)%quay.io/compliance-service/compserv:latest%' kustomize/deployment.yaml -i
 
 .PHONY: undeploy
 undeploy: $(TOOLS_DIR)/kubectl

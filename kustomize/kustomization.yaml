@@ -1,7 +1,10 @@
 namespace: compserv
 resources:
   - namespace.yaml
-  - deployment.yaml
   - service.yaml
+  - service-account.yaml
+  - persistent-disk.yaml
+  - deployment.yaml
   - secret.yaml
-
+  - configmap.yaml
+  - rbac.yaml
