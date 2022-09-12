@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func ParseConfig(configDir, configFile string) map[string]string {
+func ParseConfig(configDir, configFile string) *viper.Viper {
 	viper.SetDefault("app.host", "localhost")
 	viper.SetDefault("app.port", "50051")
 	viper.SetDefault("database.port", "5432")
@@ -29,44 +29,27 @@ func ParseConfig(configDir, configFile string) map[string]string {
 	if err := viper.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("fatal error reading config file: %w", err))
 	}
-	dbHost := viper.GetString("database.host")
-	dbPort := viper.GetString("database.port")
-	dbUsername := viper.GetString("database.username")
-	dbName := viper.GetString("database.name")
-	dbSecretArn := viper.GetString("database.secret_arn")
-	dbSecretRegion := viper.GetString("database.secret_region")
-	appHost := viper.GetString("app.host")
-	appPort := viper.GetString("app.port")
 
 	// nolint:gocritic // gocritic suggests to rewrite this as switch-case..nope..
-	if len(dbHost) == 0 {
+	if len(viper.GetString("database.host")) == 0 {
 		log.Fatal("Database host not provided.")
-	} else if len(dbSecretArn) == 0 {
+	} else if len(viper.GetString("database.secret_arn")) == 0 {
 		log.Fatal("Database password not provided as an ARN.")
-	} else if len(dbUsername) == 0 {
+	} else if len(viper.GetString("database.username")) == 0 {
 		log.Fatal("Database username not provided.")
-	} else if len(dbSecretRegion) == 0 {
+	} else if len(viper.GetString("database.secret_region")) == 0 {
 		log.Fatal("Database secret region not provided.")
 	}
 
-	m := make(map[string]string)
-	m["db_host"] = dbHost
-	m["db_port"] = dbPort
-	m["db_secret_arn"] = dbSecretArn
-	m["db_username"] = dbUsername
-	m["db_name"] = dbName
-	m["secret_region"] = dbSecretRegion
-	m["app_host"] = appHost
-	m["app_port"] = appPort
-
 	log.Printf("Loaded configuration file: %s", viper.ConfigFileUsed())
-	return m
+	return viper.GetViper()
 }
 
-func GetDatabaseConnectionString(v map[string]string) string {
-	secret := getSecret(v["db_secret_arn"], v["secret_region"])
+func GetDatabaseConnectionString(v *viper.Viper) string {
+	secret := getSecret(v.GetString("database.secret_arn"), v.GetString("database.secret_region"))
 	connectionString := fmt.Sprintf("host=%s user=%s dbname=%s password=%s port=%s",
-		v["db_host"], v["db_username"], v["db_name"], secret, v["db_port"])
+		v.GetString("database.host"), v.GetString("database.username"),
+		v.GetString("database.name"), secret, v.GetString("database.port"))
 	return connectionString
 }
 

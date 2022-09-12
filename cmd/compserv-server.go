@@ -18,8 +18,8 @@ func main() {
 	configFile := flag.String("config-file", "config.yaml",
 		"File name of the service config")
 	flag.Parse()
-	c := config.ParseConfig(*configDir, *configFile)
-	connStr := config.GetDatabaseConnectionString(c)
+	v := config.ParseConfig(*configDir, *configFile)
+	connStr := config.GetDatabaseConnectionString(v)
 	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %s", err)
@@ -27,7 +27,7 @@ func main() {
 
 	log.Printf("Connected to database: %v", db)
 
-	appStr := c["app_host"] + ":" + c["app_port"]
+	appStr := v.GetString("app.host") + ":" + v.GetString("app.port")
 	lis, err := net.Listen("tcp", appStr)
 	if err != nil {
 		log.Fatalf("Failed to listen to %s: %v", appStr, err)
