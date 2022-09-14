@@ -11,15 +11,25 @@ database:
   username:
   # Password configuration (required). Compserv doesn't support plaintext
   # passwords. Instead, it expects a pointer that it can use to fetch the
-  # secret from a secret store, like AWS Secret Manager, when needed.
+  # secret from a secret store, like AWS Secret Manager or Kubernetes Secrets
+  # API, when needed.
   password:
-    # Secret manager responsible for storing the password (required). Only one
-    # secret manager is currently supported ("aws").
+    # Secret manager responsible for storing the password (required, choices:
+    # "aws" or "kubernetes"). Compserv supports fetching secrets from the
+    # Kubernetes Secrets API or AWS Secret Manager.
     provider:
-    # Database password AWS Secret Manager ARN (required).
+    # AWS Secret Manager ARN containing the database password (required if
+    # `database.password.provider: "aws"`).
     secret_arn:
-    # AWS region of the secret (required).
+    # AWS region of the secret (required if `database.password.provider:
+    # "aws"`).
     secret_region:
+    # Kubernetes secret name (required if `database.password.provider:
+    # "kubernetes").
+    secret_name:
+    # Kubernetes namespace containing the secret (required if
+    # `database.password.provider: "kubernetes").
+    secret_namespace:
   # Database port (defaults: "5432")
   # port: "5432"
   # Database name (defaults: "compliance")

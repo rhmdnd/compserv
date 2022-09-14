@@ -34,8 +34,11 @@ func ParseConfig(configDir, configFile string) *viper.Viper {
 func GetDatabaseConnectionString(v *viper.Viper) string {
 	p := v.GetString("database.password.provider")
 	var s string
-	if p == "aws" {
+	switch p {
+	case "aws":
 		s = getSecretFromAws(v)
+	case "kubernetes":
+		s = getSecretFromKubernetes(v)
 	}
 
 	connectionString := fmt.Sprintf("host=%s user=%s dbname=%s password=%s port=%s",
@@ -54,14 +57,22 @@ func validateConfig(v *viper.Viper) {
 	}
 
 	p := v.GetString("database.password.provider")
-	if p == "aws" {
+	switch p {
+	case "aws":
 		if v.GetString("database.password.secret_arn") == "" {
 			log.Fatal("Database password not provided as a secret ARN (database.password.secret_arn)")
 		}
 		if v.GetString("database.password.secret_region") == "" {
 			log.Fatal("Missing database secret region (database.password.secret_region)")
 		}
-	} else {
+	case "kubernetes":
+		if v.GetString("database.password.secret_name") == "" {
+			log.Fatal("Database password not provided as a Kubernetes secret (database.password.secret_name)")
+		}
+		if v.GetString("database.password.secret_namespace") == "" {
+			log.Fatal("Missing database secret namespace (database.password.secret_namespace)")
+		}
+	default:
 		log.Fatalf("Invalid password provider: %s", p)
 	}
 }
