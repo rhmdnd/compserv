@@ -1,6 +1,12 @@
-# Ignore builds and tools
-builds/
-tools/
+# Ignore builds and tools. Be explicit in what we ignore from our own
+# repository. Since we use vendored dependencies, it's possible that `tools/`
+# would ignore tools/ directories in dependencies, causing CI issues that are
+# hard to debug locally.
+builds/compserv-server
+tools/golangci-lint
+tools/kubectl
+tools/migrate
+tools/protoc
 
 # Ignore potential configs
 configs/config.yaml
