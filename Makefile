@@ -87,6 +87,10 @@ $(TOOLS_DIR)/golangci-lint:
 deploy: $(TOOLS_DIR)/kubectl
 	$(KUBECTL) apply -k kustomize
 
+.PHONY: undeploy
+undeploy: $(TOOLS_DIR)/kubectl
+	$(KUBECTL) delete -k kustomize
+
 $(TOOLS_DIR)/kubectl: $(TOOLS_DIR)
 # Check if tools/kubectl exists - if it does then the default value provided
 # above will work.
