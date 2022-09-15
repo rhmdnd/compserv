@@ -13,6 +13,9 @@ MIGRATE?=
 KUBECTL = ./$(TOOLS_DIR)/kubectl
 PROTOC = ./$(TOOLS_DIR)/protoc
 
+IMAGE_REPO := quay.io/compliance-service/compserv
+TAG := latest
+
 .PHONY: $(BUILDS_DIR)
 $(BUILDS_DIR):
 	mkdir -p $(BUILDS_DIR)
@@ -24,6 +27,14 @@ $(TOOLS_DIR):
 .PHONY: build
 build: $(BUILDS_DIR)
 	go build -o $(BUILDS_DIR) cmd/compserv-server.go
+
+.PHONY: build-image
+build-image: $(BUILDS_DIR)
+	podman build -f Dockerfile -t $(IMAGE_REPO):$(TAG) .
+
+.PHONY: push-image
+push-image:
+	podman push $(IMAGE_REPO):$(TAG)
 
 .PHONY: clean
 clean:
