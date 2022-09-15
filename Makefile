@@ -13,8 +13,8 @@ MIGRATE?=
 KUBECTL = ./$(TOOLS_DIR)/kubectl
 PROTOC = ./$(TOOLS_DIR)/protoc
 
-IMAGE_REPO := quay.io/compliance-service/compserv
-TAG := latest
+IMAGE_REPO ?= quay.io/compliance-service/compserv
+TAG ?= latest
 
 .PHONY: $(BUILDS_DIR)
 $(BUILDS_DIR):
