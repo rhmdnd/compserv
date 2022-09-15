@@ -1,15 +1,36 @@
 package compserv
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/spf13/viper"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
+
+func getSecretFromKubernetes(v *viper.Viper) string {
+	c, err := rest.InClusterConfig()
+	if err != nil {
+		log.Fatalf("Failed to build Client for Kubernetes cluster: %s", err)
+	}
+	cs := kubernetes.NewForConfigOrDie(c)
+
+	n := v.GetString("database.password.secret_name")
+	ns := v.GetString("database.password.secret_namespace")
+	sm, err := cs.CoreV1().Secrets(ns).Get(context.TODO(), n, metav1.GetOptions{})
+	if err != nil {
+		log.Fatalf("Failed to retrieve secret: %s", err)
+	}
+	return string(sm.Data["password"])
+}
 
 // This code comes from AWS Secret Manager
 func getSecretFromAws(v *viper.Viper) string {
