@@ -9,10 +9,17 @@ database:
   host:
   # Database service user (required).
   username:
-  # Database password AWS Secret Manager ARN (required).
-  secret_arn:
-  # Region of the secret (required).
-  secret_region:
+  # Password configuration (required). Compserv doesn't support plaintext
+  # passwords. Instead, it expects a pointer that it can use to fetch the
+  # secret from a secret store, like AWS Secret Manager, when needed.
+  password:
+    # Secret manager responsible for storing the password (required). Only one
+    # secret manager is currently supported ("aws").
+    provider:
+    # Database password AWS Secret Manager ARN (required).
+    secret_arn:
+    # AWS region of the secret (required).
+    secret_region:
   # Database port (defaults: "5432")
   # port: "5432"
   # Database name (defaults: "compliance")
