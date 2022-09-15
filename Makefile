@@ -96,6 +96,12 @@ deploy: $(TOOLS_DIR)/kubectl
 undeploy: $(TOOLS_DIR)/kubectl
 	$(KUBECTL) delete -k kustomize
 
+# Basic installation of ComplianceAsCode/compliance-operator so we can use the
+# same cluster for generating results for the compserv.
+.PHONY: deploy-co
+deploy-co: $(TOOLS_DIR)/kubectl
+	$(KUBECTL) apply -k kustomize/compliance-operator
+
 $(TOOLS_DIR)/kubectl: $(TOOLS_DIR)
 # Check if tools/kubectl exists - if it does then the default value provided
 # above will work.
