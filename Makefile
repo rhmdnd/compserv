@@ -25,6 +25,11 @@ $(TOOLS_DIR):
 build: $(BUILDS_DIR)
 	go build -o $(BUILDS_DIR) cmd/compserv-server.go
 
+.PHONY: clean
+clean:
+	rm -f $(BUILDS_DIR)/*
+	rm -f $(TOOLS_DIR)/*
+
 .PHONY: grpc
 grpc: $(TOOLS_DIR)/protoc
 	$(PROTOC) --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative pkg/api/compserv.proto
