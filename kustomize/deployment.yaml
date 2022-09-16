@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,7 +21,11 @@ spec:
         name: postgres
         env:
           - name: PGDATA
-            value: /var/lib/postgres/data
+            value: /var/lib/postgres/data/compliance
+          - name: POSTGRES_DB
+            value: compliance
+          - name: POSTGRES_USER
+            value: postgres
           - name: POSTGRES_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -30,8 +35,55 @@ spec:
           - containerPort: 5432
             name: postgres
         volumeMounts:
-          - name: postgres-persistent-storage
-            mountPath: /var/lib/postgres
+          - name: postgres-pv
+            mountPath: /var/lib/postgres/data/
+            subPath: compliance
       volumes:
-        - name: postgres-persistent-storage
-          emptyDir: {}
+        - name: postgres-pv
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compserv
+  labels:
+    app: compserv
+spec:
+  selector:
+    matchLabels:
+      app: compserv
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: compserv
+    spec:
+      initContainers:
+      - image: quay.io/compliance-service/compserv:latest
+        name: compserv-init
+        command: ["/app/builds/compserv-migrate", "--config-dir", "config/", "--config-file", "config.yaml"]
+        volumeMounts:
+        - name: compserv-config
+          mountPath: "/app/config"
+          readOnly: true
+      containers:
+      - image: quay.io/compliance-service/compserv:latest
+        name: compserv
+        ports:
+          - containerPort: 50051
+            name: grpc
+        volumeMounts:
+        - name: compserv-config
+          mountPath: "/app/config"
+          readOnly: true
+        command: ["/app/builds/compserv-server", "--config-dir", "config/", "--config-file", "config.yaml"]
+      serviceAccountName: compserv-sa
+      volumes:
+        - name: compserv-config
+          configMap:
+            name: compserv-config
+            items:
+              - key: config
+                path: "config.yaml"

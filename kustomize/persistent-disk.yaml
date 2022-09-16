@@ -1,0 +1,17 @@
+# The volume created dynamically from this claim will be reclaimed when the pod
+# is gone. Is that the behavior we want or do we want to create a persistent
+# volume directly and use that?
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: postgres
+  name: postgres-pvc
+spec:
+  storageClassName: "gp2"
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
