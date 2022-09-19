@@ -3,7 +3,7 @@ module github.com/rhmdnd/compserv
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go v1.44.99
+	github.com/aws/aws-sdk-go v1.44.101
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/google/uuid v1.3.0
 	github.com/spf13/viper v1.13.0
@@ -12,6 +12,7 @@ require (
 	google.golang.org/protobuf v1.28.1
 	gorm.io/driver/postgres v1.3.9
 	gorm.io/gorm v1.23.8
+	k8s.io/apimachinery v0.22.5
 	k8s.io/client-go v0.22.5
 )
 
@@ -67,7 +68,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/api v0.22.5 // indirect
-	k8s.io/apimachinery v0.22.5 // indirect
 	k8s.io/klog/v2 v2.30.0 // indirect
 	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
