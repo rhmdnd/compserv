@@ -10,8 +10,8 @@ require (
 	github.com/stretchr/testify v1.8.0
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
-	gorm.io/driver/postgres v1.4.4
-	gorm.io/gorm v1.24.0
+	gorm.io/driver/postgres v1.4.5
+	gorm.io/gorm v1.24.1-0.20221019064659-5dd2bb482755
 	k8s.io/apimachinery v0.22.5
 	k8s.io/client-go v0.22.5
 )
