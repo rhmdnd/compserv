@@ -11,7 +11,7 @@ require (
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
 	gorm.io/driver/postgres v1.4.4
-	gorm.io/gorm v1.24.0
+	gorm.io/gorm v1.24.3
 	k8s.io/apimachinery v0.22.5
 	k8s.io/client-go v0.22.5
 )
