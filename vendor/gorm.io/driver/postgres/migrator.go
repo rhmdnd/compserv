@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/migrator"
@@ -197,6 +197,8 @@ func (m Migrator) AddColumn(value interface{}, field string) error {
 	if err := m.Migrator.AddColumn(value, field); err != nil {
 		return err
 	}
+	m.resetPreparedStmts()
+
 	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		if field := stmt.Schema.LookUpField(field); field != nil {
 			if field.Comment != "" {
@@ -266,7 +268,7 @@ func (m Migrator) MigrateColumn(value interface{}, field *schema.Field, columnTy
 
 // AlterColumn alter value's `field` column' type based on schema definition
 func (m Migrator) AlterColumn(value interface{}, field string) error {
-	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
+	err := m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		if field := stmt.Schema.LookUpField(field); field != nil {
 			var (
 				columnTypes, _  = m.DB.Migrator().ColumnTypes(value)
@@ -279,7 +281,22 @@ func (m Migrator) AlterColumn(value interface{}, field string) error {
 			}
 
 			fileType := clause.Expr{SQL: m.DataTypeOf(field)}
+			// check for typeName and SQL name
+			isSameType := true
 			if fieldColumnType.DatabaseTypeName() != fileType.SQL {
+				isSameType = false
+				// if different, also check for aliases
+				aliases := m.GetTypeAliases(fieldColumnType.DatabaseTypeName())
+				for _, alias := range aliases {
+					if strings.HasPrefix(fileType.SQL, alias) {
+						isSameType = true
+						break
+					}
+				}
+			}
+
+			// not same, migrate
+			if !isSameType {
 				filedColumnAutoIncrement, _ := fieldColumnType.AutoIncrement()
 				if field.AutoIncrement && filedColumnAutoIncrement { // update
 					serialDatabaseType, _ := getSerialDatabaseType(fileType.SQL)
@@ -317,14 +334,17 @@ func (m Migrator) AlterColumn(value interface{}, field string) error {
 				}
 			}
 
-			if uniq, _ := fieldColumnType.Unique(); uniq != field.Unique {
+			if uniq, _ := fieldColumnType.Unique(); !uniq && field.Unique {
 				idxName := clause.Column{Name: m.DB.Config.NamingStrategy.IndexName(stmt.Table, field.DBName)}
-				if err := m.DB.Exec("ALTER TABLE ? ADD CONSTRAINT ? UNIQUE(?)", m.CurrentTable(stmt), idxName, clause.Column{Name: field.DBName}).Error; err != nil {
-					return err
+				// Not a unique constraint but a unique index
+				if !m.HasIndex(stmt.Table, idxName.Name) {
+					if err := m.DB.Exec("ALTER TABLE ? ADD CONSTRAINT ? UNIQUE(?)", m.CurrentTable(stmt), idxName, clause.Column{Name: field.DBName}).Error; err != nil {
+						return err
+					}
 				}
 			}
 
-			if v, _ := fieldColumnType.DefaultValue(); v != field.DefaultValue {
+			if v, ok := fieldColumnType.DefaultValue(); (field.DefaultValueInterface == nil && ok) || v != field.DefaultValue {
 				if field.HasDefaultValue && (field.DefaultValueInterface != nil || field.DefaultValue != "") {
 					if field.DefaultValueInterface != nil {
 						defaultStmt := &gorm.Statement{Vars: []interface{}{field.DefaultValueInterface}}
@@ -347,6 +367,12 @@ func (m Migrator) AlterColumn(value interface{}, field string) error {
 		}
 		return fmt.Errorf("failed to look up field with name: %s", field)
 	})
+
+	if err != nil {
+		return err
+	}
+	m.resetPreparedStmts()
+	return nil
 }
 
 func (m Migrator) HasConstraint(value interface{}, name string) bool {
@@ -415,7 +441,7 @@ func (m Migrator) ColumnTypes(value interface{}) (columnTypes []gorm.ColumnType,
 			}
 
 			if column.DefaultValueValue.Valid {
-				column.DefaultValueValue.String = regexp.MustCompile(`'(.*)'::[\w]+$`).ReplaceAllString(column.DefaultValueValue.String, "$1")
+				column.DefaultValueValue.String = regexp.MustCompile(`'?(.*)\b'?:+[\w\s]+$`).ReplaceAllString(column.DefaultValueValue.String, "$1")
 			}
 
 			if datetimePrecision.Valid {
@@ -532,7 +558,7 @@ func (m Migrator) GetRows(currentSchema interface{}, table interface{}) (*sql.Ro
 		dialector, _ := m.Dialector.(Dialector)
 		// use simple protocol
 		if !m.DB.PrepareStmt && (dialector.Config != nil && (dialector.Config.DriverName == "" || dialector.Config.DriverName == "pgx")) {
-			d.Statement.Vars = append(d.Statement.Vars, pgx.QuerySimpleProtocol(true))
+			d.Statement.Vars = append([]interface{}{pgx.QueryExecModeSimpleProtocol}, d.Statement.Vars...)
 		}
 		return d
 	}).Rows()
@@ -693,4 +719,31 @@ func groupByIndexName(indexList []*Index) map[string][]*Index {
 
 func (m Migrator) GetTypeAliases(databaseTypeName string) []string {
 	return typeAliasMap[databaseTypeName]
+}
+
+// should reset prepared stmts when table changed
+func (m Migrator) resetPreparedStmts() {
+	if m.DB.PrepareStmt {
+		if pdb, ok := m.DB.ConnPool.(*gorm.PreparedStmtDB); ok {
+			pdb.Reset()
+		}
+	}
+}
+
+func (m Migrator) DropColumn(dst interface{}, field string) error {
+	if err := m.Migrator.DropColumn(dst, field); err != nil {
+		return err
+	}
+
+	m.resetPreparedStmts()
+	return nil
+}
+
+func (m Migrator) RenameColumn(dst interface{}, oldName, field string) error {
+	if err := m.Migrator.RenameColumn(dst, oldName, field); err != nil {
+		return err
+	}
+
+	m.resetPreparedStmts()
+	return nil
 }
