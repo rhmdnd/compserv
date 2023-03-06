@@ -1,0 +1,5 @@
+namespace: openshift-compliance
+resources:
+  - namespace.yaml
+  - operator-group.yaml
+  - subscription.yaml
